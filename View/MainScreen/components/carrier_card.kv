@@ -1,0 +1,15 @@
+<CarrierCard>:
+
+    MDLabel:
+        text: root.number
+        font_style: 'H6'
+        halign: 'center'
+        size_hint_x: .5
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDLabel:
+            text: f"{root.name}"
+
+        MDLabel:
+            text: f'Lap Count: {root.lap_count}'

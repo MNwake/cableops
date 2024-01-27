@@ -1,0 +1,187 @@
+<MainScreenView>
+    MDBoxLayout:
+
+        MDBoxLayout:
+            md_bg_color: app.theme_cls.bg_darkest
+            orientation: 'vertical'
+            padding: '12dp'
+            spacing: '12dp'
+
+
+            MyToggleButton:
+                id: power_button
+                size_hint_x: 1
+                size_hint_y: 1
+                text: root.status
+                font_size: '24sp'
+                grouped: False
+                background_color: 'red'
+                font_color_down: 'white'
+                font_color_normal: 'white'
+                background_down: 'green'
+                background_normal: 'red'
+                on_state: root.controller.start_cable() if self.state == 'down' else root.controller.stop_cable()
+
+            MDBoxLayout:
+                id: direction_switch
+                adaptive_height: True
+
+                MyToggleButton:
+                    id: forward_toggle
+                    size_hint_x: 1
+                    text: 'Forward'
+                    group: 'direction'
+                    state: 'down'
+                    on_state: root.controller.change_direction('Forward') if self.state == 'down' else None
+
+
+                MyToggleButton:
+                    id: reverse_toggle
+                    size_hint_x: 1
+                    text: 'Reverse'
+                    group: 'direction'
+                    on_state: root.controller.change_direction('Reverse') if self.state == 'down' else None
+
+
+            MDBoxLayout:
+                id: speed_switch
+                adaptive_height: True
+
+                MyToggleButton:
+                    id: idle
+                    size_hint_x: 1
+                    text: 'Idle'
+                    group: 'speed'
+                    on_state: root.controller.adjust_speed(1) if self.state == 'down' else None
+
+                MyToggleButton:
+                    text: 'Speed 1'
+                    group: 'speed'
+                    size_hint_x: 1
+                    on_state: root.controller.adjust_speed(2) if self.state == 'down' else None
+
+                MyToggleButton:
+                    text: 'Speed 2'
+                    size_hint_x: 1
+                    group: 'speed'
+                    on_state: root.controller.adjust_speed(3) if self.state == 'down' else None
+
+                MyToggleButton:
+                    text: 'Speed 3'
+                    size_hint_x: 1
+                    group: 'speed'
+                    on_state: root.controller.adjust_speed(4) if self.state == 'down' else None
+
+
+            MDGridLayout:
+                adaptive_height: True
+                spacing: '12dp'
+                cols: 2
+                rows: 2
+
+                MDDropDownItem:
+                    id: field
+                    pos_hint: {'center_x': .5, 'center_y': .6}
+                    size_hint_x: None
+                    text: root.rider_on_deck
+                    width: "200dp"
+                    hint_text: "Rider on Dock"
+                    on_release: root.menu.open()
+
+                MDLabel:
+                    id: active_rider
+                    pos_hint: {'center_x': .5, 'center_y': .6}
+                    size_hint_x: None
+                    text: f'Carrier {root.carrier_number}: {root.active_rider_name}'
+                    width: "200dp"
+
+                MDRaisedButton:
+                    id: send_button
+                    text: 'Send'
+                    on_release: root.send_pressed()
+
+                MDRaisedButton:
+                    id: fork_button
+                    text: 'Fork'
+                    on_release: root.fork_pressed()
+
+            MDRaisedButton:
+                id: carrier_button
+                text: 'Carrier Pass'
+                on_release: root.controller.simulate_carrier()
+
+            Widget:
+
+        MDBoxLayout:
+            id: vfd_box
+            orientation: 'vertical'
+            padding: '12dp'
+            spacing: '12dp'
+
+            MDLabel:
+                adaptive_height: True
+                text: 'Motor:'
+                font_style: 'H4'
+
+            MDBoxLayout:
+                adaptive_height: True
+                MDLabel:
+                    adaptive_height: True
+                    text: root.status
+
+                MDLabel:
+                    adaptive_height: True
+                    text: root.direction
+
+                MDLabel:
+                    adaptive_height: True
+                    text: f'speed {root.speed}'
+
+            MDBoxLayout:
+                adaptive_height: True
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    MDLabel:
+                        adaptive_height: True
+                        text: 'Magazine:'
+                        font_style: 'H4'
+
+                    MDLabel:
+                        adaptive_height: True
+                        text: f'Engaged: {root.magazine}'
+
+                MDBoxLayout:
+                    orientation: 'vertical'
+
+                    MDLabel:
+                        adaptive_height: True
+                        text: 'Fork:'
+                        font_style: 'H4'
+
+                    MDLabel:
+                        adaptive_height: True
+                        text: f'Engaged: {root.fork}'
+
+                    MDLabel:
+                        adaptive_height: True
+                        text: f'Camera: {root.fork_camera}'
+
+            MDLabel:
+                adaptive_height: True
+                text: 'Carriers:'
+                font_style: 'H4'
+
+            MDGridLayout:
+                id: carrier_grid
+                cols: 2
+                spacing: '12dp'
+
+            Video:
+                id: fork_video
+
+            Widget:
+
+
+
+
+
