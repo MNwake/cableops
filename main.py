@@ -13,15 +13,10 @@ https://en.wikipedia.org/wiki/Model–view–controller
 import sys
 import threading
 
-from kivy import Config
 from kivy.core.window import Window
-from kivy.input.providers import linuxwacom
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
-
-from Database.database import DataBase
 from View.screens import screens
-
 from web.web_server import app as web_server
 
 if 'linux' in sys.platform:

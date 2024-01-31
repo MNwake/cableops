@@ -12,7 +12,6 @@ from kivymd.uix.segmentedcontrol import MDSegmentedControl, MDSegmentedControlIt
 from View.MainScreen.components.carrier_card import CarrierCard
 from View.base_screen import BaseScreenView
 
-CarrierCard
 
 
 class MyToggleButton(MDFlatButton, MDToggleButton):

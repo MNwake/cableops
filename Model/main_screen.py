@@ -1,5 +1,5 @@
-from Cable.cable import Cable
-from Database.rider import Rider
+from CWA import Rider
+from Cable import Cable
 
 from Model.base_model import BaseScreenModel
 
