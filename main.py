@@ -13,6 +13,7 @@ https://en.wikipedia.org/wiki/Model–view–controller
 import sys
 import threading
 
+from cwa import DataBase
 from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
@@ -50,10 +51,14 @@ class CableOps(MDApp):
         # application.
         self.connection = DataBase()
         self.manager_screens = MDScreenManager()
+        print(sys.platform)
         if 'darwin' in sys.platform:
             sync_files()
         
     def build(self) -> MDScreenManager:
+        self.theme_cls.primary_palette = 'Blue'
+        self.theme_cls.theme_style = 'Light'
+        # self.theme_cls.dynamic_color = True
         self.generate_application_screens()
         if 'linux' in sys.platform:
             self.start_flask_server()

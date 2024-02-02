@@ -1,5 +1,6 @@
-from CWA import Rider
-from Cable import Cable
+from cwa.Cable import Cable
+from cwa.Events import Rider
+
 
 from Model.base_model import BaseScreenModel
 

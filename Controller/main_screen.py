@@ -20,6 +20,9 @@ class MainScreenController:
         return self.view
 
     def start_cable(self):
+        if self.model.cable.e_brake:
+            self.view.emergency_brake_error()
+            return
         self.model.cable.start()
         self.model.notify_observers('main screen')
 
@@ -64,3 +67,11 @@ class MainScreenController:
     def simulate_carrier(self):
         print('simulate carrier')
         self.model.cable.carrier_pass_motor()
+
+    def emergency_brake(self, root):
+        self.model.cable.emergency_stop()
+        self.model.notify_observers('main screen')
+        self.view.lock_controls(root.ids.lock_button)
+
+    def clear_emergency_brake(self):
+        self.model.cable.e_brake = False
