@@ -7,5 +7,7 @@ class LockButton(MDIconButton):
     def on_is_cable_locked(self, widget, value):
         if value:
             self.style = 'filled'
+            self.icon = 'lock'
         else:
             self.style = 'outlined'
+            self.icon = 'lock-open-outline'

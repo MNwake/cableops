@@ -1,0 +1,26 @@
+<CustomOneLineIconListItem>:
+    size_hint_y: None
+    height: '48dp'
+    MDListItemHeadlineText:
+        text: root.text
+
+<RiderSearch>:
+    adaptive_height: True
+    text: root.rider_on_deck
+    mode: 'outlined'
+
+
+#    MDTextFieldHintText:
+#        text: "Rider on Deck"
+
+    MDTextFieldHelperText:
+        text: "Rider on Deck"
+        mode: 'persistent'
+
+    MDTextFieldLeadingIcon:
+        icon: 'magnify'
+
+    MyTrailingIcon:
+        icon: 'close'
+        on_release: root.clear_text()
+

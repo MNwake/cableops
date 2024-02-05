@@ -1,5 +1,5 @@
-from kivymd.uix.button import MDIconButton
+from kivymd.uix.button import MDButton
 
 
-class EmergencyBrake(MDIconButton):
+class EmergencyBrake(MDButton):
     pass

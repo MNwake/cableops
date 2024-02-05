@@ -1,6 +1,5 @@
 from cwa.Cable import Cable
-from cwa.Events import Rider
-
+from cwa.Events import Rider, Park
 
 from Model.base_model import BaseScreenModel
 
@@ -14,16 +13,16 @@ class MainScreenModel(BaseScreenModel):
 
     def __init__(self, **kw):
         super().__init__(**kw)
-        self.cable = Cable()
+        self.parks = Park.objects().all()
+        self.cable = Cable.objects().first()
         self.fork_status = self.cable.fork.engaged
-        self.riders = Rider.objects().all()
-        self._riders_list = self.riders
         self._rider_on_deck = None
         self.engaged = False
         self.cable.magazine.engaged_callback = self.on_engage
         self.riders_on_carriers = None
+        self.riders_checked_in = None
         self.cable.fork.set_model_callback(self.fork_status_changed)  # Set the callback
-
+        self.cable.carrier_pass_callback = self.on_carrier_pass
 
     @property
     def rider_on_deck(self):
@@ -35,15 +34,6 @@ class MainScreenModel(BaseScreenModel):
         self.cable.rider_on_deck = value
         self.notify_observers('main screen')
 
-    @property
-    def riders_list(self):
-        return self._riders_list
-
-    @riders_list.setter
-    def riders_list(self, value):
-        self._riders_list = value
-        self.notify_observers('main screen')
-
     def on_engage(self):
         self.engaged = self.cable.magazine.magazine
         self.notify_observers('main screen')
@@ -53,19 +43,24 @@ class MainScreenModel(BaseScreenModel):
         self.fork_status = status
         self.notify_observers('main screen')
 
-    def update_rider_list(self, text=None):
-        # Get a set of riders who are currently on carriers
-        self.riders_on_carriers = {carrier.rider for carrier in self.cable.carriers if carrier.rider}
+    def on_carrier_pass(self):
+        print('model on carrier pass')
+        self.rider_on_deck = self.cable.rider_on_deck
+        print('rider_on_deck_model:', self.rider_on_deck)
+        self.update_rider_list()
 
+    def update_rider_list(self, name=None):
+        # Get a set of riders who are currently on carriers
+        # self.riders_on_carriers = {carrier.rider for carrier in self.cable.carriers if carrier.rider}
         # Filter out these riders from the main rider list
-        filtered_riders = [rider for rider in self.riders if rider not in self.riders_on_carriers]
+        filtered_riders = [rider for rider in self.cable.park.riders_checked_in]
 
         # Additional filtering based on the 'text' if provided
-        if text:
-            text = text.lower()  # Lowercasing for case-insensitive search
+        if name:
+            text = name.lower()  # Lowercasing for case-insensitive search
             filtered_riders = [rider for rider in filtered_riders if text in rider.full_name.lower()]
 
-        self.riders_list = filtered_riders
-
+        self.riders_checked_in = filtered_riders
+        print(self.riders_checked_in)
         # Notify observers about the update
         self.notify_observers('main screen')

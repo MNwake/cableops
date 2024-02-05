@@ -1,5 +1,3 @@
-import threading
-
 from kivy.properties import StringProperty, ObjectProperty, BooleanProperty
 from kivymd.uix.card import MDCard
 
@@ -17,13 +15,15 @@ class CarrierCard(MDCard):
 
 
     def on_carrier(self, instance, value):
+        print('carrier updated')
         if value is None:
             self.name = 'Empty'
-            self.lap_count = '0'
+            self.lap_count = ''
             return
 
         self.number = str(value.number)
         if value.rider:
+            print('carrier has rider', value.rider.full_name)
             self.name = value.rider.full_name
             self.lap_count = str(value.lap_count)
             if value.lap_count > 5: # TODO implement lap limit
@@ -37,9 +37,9 @@ class CarrierCard(MDCard):
             self.deactivate_card()
 
     def deactivate_card(self):
-        self.elevation = 0
+        self.style = 'filled'
         self.md_bg_color = 'white'
 
     def activate_card(self):
-        self.elevation = 2
+        self.style = 'outlined'
         self.md_bg_color = [0,1,0,.5]

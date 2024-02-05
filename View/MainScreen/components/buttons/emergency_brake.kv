@@ -1,12 +1,16 @@
 <EmergencyBrake>:
-    size_hint: 1,1
     theme_font_size: "Custom"
-    font_size: "84sp"
-    pos_hint: {'center_x': .5, 'center_y': .5}
-    radius: 0
-    elevation: 0
     theme_bg_color: "Custom"
     md_bg_color: "red"
-    icon: 'stop'
-    theme_icon_color: 'Custom'
-    icon_color: 'white'
+    style: 'elevated'
+    pos_hint: {'center_x': .5, 'center_y': .5}
+    radius: 2
+
+    MDButtonIcon:
+        id: power_icon
+        icon: 'stop-circle'
+        theme_icon_color: 'Custom'
+        icon_color: 'white'
+
+    MDButtonText:
+        text: "E-Brake"

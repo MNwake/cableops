@@ -30,8 +30,8 @@ def sync_files():
     rsync_command = [
         "rsync",
         "-avz",
-        "/Users/theokoester/dev/projects/python/cableops/app/",
-        "theokoester@raspi:/home/theokoester/dev/cableops/app/"
+        "/Users/theokoester/dev/projects/python/CWA/",
+        "theokoester@raspi:/home/theokoester/dev/cwa/"
     ]
     try:
         result = subprocess.run(rsync_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -57,8 +57,8 @@ class CableOps(MDApp):
         
     def build(self) -> MDScreenManager:
         self.theme_cls.primary_palette = 'Blue'
-        self.theme_cls.theme_style = 'Light'
-        # self.theme_cls.dynamic_color = True
+        self.theme_cls.theme_style = 'Dark'
+        self.theme_cls.dynamic_color = True
         self.generate_application_screens()
         if 'linux' in sys.platform:
             self.start_flask_server()

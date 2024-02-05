@@ -1,33 +1,22 @@
 <MyToggleButton>:
-    group: 'speed_group'
     style: 'outlined'
     radius: 2
     MDButtonText
         text: root.text
 
 <SpeedControl>:
+    orientation: 'vertical'
+    spacing: '12dp'
     adaptive_height: True
-    MyToggleButton:
-        id: zero
-        text: 'Zero'
-#        value: 0
-        group: 'speed'
-        on_state: root.set_speed(*args)
-    MyToggleButton:
-        id: speed_one
-        text: 'Speed 1'
-#        value: root.speed_preset[0]
-        group: 'speed'
-        on_state: root.set_speed(*args)
-    MyToggleButton:
-        id: speed_two
-        text: 'Speed 2'
-#        value: root.speed_preset[1]
-        group: 'speed'
-        on_state: root.set_speed(*args)
-    MyToggleButton:
-        id: speed_three
-        text: 'Speed 3'
-#        value: root.speed_preset[2]
-        group: 'speed'
-        on_state: root.set_speed(*args)
+
+    MDLabel:
+        text: f'Speed: {root.speed}'
+        font_style: 'Title'
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        adaptive_height: True
+
+    MDBoxLayout:
+        id: speed_box
+        adaptive_height: True
+
+

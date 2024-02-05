@@ -1,15 +1,27 @@
 <CarrierCard>:
-
+    size_hint_y: None
+    minimum_height: '64dp'
+    spacing: '12dp'
+    padding: '12dp'
     MDLabel:
         text: root.number
-        font_style: 'H6'
+        font_style: 'Title'
+        role: 'large'
         halign: 'center'
-        size_hint_x: .5
+        adaptive_width: True
+
+    MDDivider:
+        orientation: 'vertical'
     MDBoxLayout:
         orientation: 'vertical'
 
         MDLabel:
-            text: f"{root.name}"
+            text: root.name
+            font_style: 'Title'
+            role: 'small'
+
 
         MDLabel:
-            text: f'Lap Count: {root.lap_count}'
+            text: root.lap_count
+            font_style: 'Label'
+            role: 'small'

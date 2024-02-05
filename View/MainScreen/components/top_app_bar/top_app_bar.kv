@@ -1,0 +1,18 @@
+<MyTopAppBar>:
+    type: 'small'
+
+    MDTopAppBarLeadingButtonContainer:
+
+        MDActionTopAppBarButton:
+            icon: 'menu'
+            on_release: root.menu_icon_press()
+
+    MDTopAppBarTitle:
+        text: root.park_name
+        pos_hint: {'center_x': .5}
+
+    MDTopAppBarTrailingButtonContainer:
+
+        MDActionTopAppBarButton:
+            icon: 'cog'
+            on_release: root.settings_icon_press()

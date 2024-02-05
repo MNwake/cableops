@@ -1,82 +1,185 @@
+#:import CustomOneLineIconListItem View.MainScreen.components.CustomOneLineIconListItem
 <MainScreenView>
     md_bg_color: app.theme_cls.backgroundColor
 
+    MDNavigationLayout:
+        id: nav_layout
 
-    MDBoxLayout:
-        orientation: 'vertical'
-        MDTopAppBar:
-            type: 'small'
-
-            MDTopAppBarLeadingButtonContainer:
-
-                MDActionTopAppBarButton:
-                    icon: 'menu'
-
-            MDTopAppBarTitle:
-                text: root.park_name
-                pos_hint: {'center_x': .5}
-
-            MDTopAppBarTrailingButtonContainer:
-
-                MDActionTopAppBarButton:
-                    icon: 'cog'
-
-        MDBoxLayout:
-            orientation: 'horizontal'
-
-            MDBoxLayout:
-                orientation: 'vertical'
-
+        MDScreenManager:
+            MDScreen:
                 MDBoxLayout:
-                    padding: '12dp'
-                    spacing: '42dp'
+                    orientation: 'vertical'
 
-
-                    EmergencyBrake:
-                        id: ebrake
-                        halign: 'center'
-                        pos_hint: {'center_x':.5, 'center_y': .5}
-                        on_release: root.controller.emergency_brake(root)
+                    MyTopAppBar:
+                        theme_bg_color: "Custom"
+                        md_bg_color: app.theme_cls.surfaceVariantColor
+                        park_name: root.park_name
+                        menu_icon: root.on_menu_callback
+                        settings_icon: root.on_settings_callback
 
                     MDBoxLayout:
-                        orientation: 'vertical'
+                        orientation: 'horizontal'
+
                         MDBoxLayout:
-                            PowerButton:
-                                id: power_button
-                                on_release: root.controller.start_cable() if not self.is_cable_on else root.controller.stop_cable()
+                            orientation: 'vertical'
+                            md_bg_color: app.theme_cls.surfaceVariantColor
+                            padding: '12dp'
+                            spacing: '24dp'
+                            size_hint_x: None
+                            width: '400dp'
 
-                            LockButton:
-                                id: lock_button
-                                on_release: root.lock_controls(self) if not self.is_cable_locked else root.unlock_controls(self)
+                            MDBoxLayout:
+                                adaptive_height: True
 
-                MDDivider:
+                                EmergencyBrake:
+                                    id: ebrake
+                                    size_hint_x: 1
+                                    halign: 'center'
+                                    pos_hint: {'center_x':.5, 'center_y': .5}
+                                    on_release: root.controller.emergency_brake(root)
+
+                                MDBoxLayout:
+                                    orientation: 'vertical'
+                                    MDBoxLayout:
+                                        spacing: '24dp'
+
+                                        PowerButton:
+                                            id: power_button
+                                            on_release: root.controller.start_cable() if not self.is_cable_on else root.controller.stop_cable()
+
+                                        LockButton:
+                                            id: lock_button
+                                            pos_hint: {'right': 1, 'center_y': .5}
+                                            on_release: root.lock_controls(self) if not self.is_cable_locked else root.unlock_controls(self)
+
+                            MDDivider:
+
+                            MDBoxLayout:
+                                spacing: '24dp'
+                                adaptive_height: True
+
+                                MDLabel:
+                                    text: 'Direction:'
+                                    font_style: 'Title'
+                                    pos_hint: {'center_x': .5, 'center_y': .5}
+                                    adaptive_size: True
+                                DirectionButton:
+                                    id: direction_button
+                                    is_cable_going_forward: root.model.cable.forward
+                                    on_release: root.controller.change_direction(self)
+
+                            SpeedControl:
+                                id: speed_control
+                                halign: 'center'
+                                speed_presets: root.preset_speeds
+                                on_speed: root.controller.adjust_speed(self.speed)
+
+                            MDDivider:
+                                size_hint_x: 1
+                                pos_hint: {'center_x': .5, 'center_y': .5}
+
+                            MDBoxLayout:
+                                adaptive_height: True
+                                orientation: 'vertical'
+
+                                RiderSearch:
+                                    id: rider_search
+                                    rider_on_deck: root.rider_on_deck
+                                    on_focus: root.focus_rider_search(*args)
+                                    on_text: root.controller.update_checked_in_riders(self.text)
 
 
-                MDLabel:
-                    text: f'Speed: {root.speed}'
-                    font_style: 'Title'
 
-                SpeedControl:
-                    id: speed_control
-                    size_hint_x: 1
-                    speed_presets: root.preset_speeds
-                    on_speed: root.controller.adjust_speed(self.speed)
+                            MDBoxLayout:
+                                MDButton:
+                                    id: fork_button
+                                    style: 'elevated'
+                                    radius: '12dp'
+                                    theme_width: 'Custom'
+                                    height: '56dp'
+                                    size_hint_x: 1
+                                    on_release: root.fork_pressed()
 
-                MDDivider:
-                    size_hint_x: 1
-                    pos_hint: {'center_x': .5, 'center_y': .5}
+                                    MDButtonText:
+                                        text: 'Fork'
+                                        pos_hint: {"center_x": .5, "center_y": .5}
 
-                MDLabel:
-                    text: 'Riders:'
-                    font_style: 'Title'
+                                MDButton:
+                                    id: send_button
+                                    style: 'elevated'
+                                    radius: '12dp'
+                                    theme_width: 'Custom'
+                                    height: '56dp'
+                                    size_hint_x: 1
+                                    on_release: root.send_pressed()
 
-                MDDivider:
-                    size_hint_x: 1
-                    pos_hint: {'center_x': .5, 'center_y': .5}
+                                    MDButtonText:
+                                        text: 'Send'
+                                        pos_hint: {"center_x": .5, "center_y": .5}
+
+                            MDDivider:
+                                size_hint_x: 1
+                                pos_hint: {'center_x': .5, 'center_y': .5}
 
 
-            MDBoxLayout:
-                md_bg_color: app.theme_cls.inverseOnSurfaceColor
-                Widget:
+                        MDBoxLayout:
+                            md_bg_color: app.theme_cls.backgroundColor
+                            orientation: 'vertical'
+                            padding: '12dp'
+                            spacing: '12dp'
 
+                            MDBoxLayout:
+                                orientation: 'vertical'
+                                adaptive_height: True
+                                MDLabel:
+                                    font_style: 'Label'
+                                    role: 'large'
+                                    text: f'Cable {root.status}'
 
+                                MDBoxLayout:
+                                    adaptive_height: True
+                                    MDLabel:
+                                        font_style: 'Label'
+                                        role: 'large'
+                                        text: f'Fork Engaged: {root.fork}'
+
+                                    MDLabel:
+                                        font_style: 'Label'
+                                        role: 'large'
+                                        text: f'Magazine Engaged: {root.magazine}'
+                                MDBoxLayout:
+                                    MDLabel:
+                                        font_style: 'Label'
+                                        role: 'large'
+                                        text: f'Active Rider: {root.active_rider_name}'
+                                    MDLabel:
+                                        font_style: 'Label'
+                                        role: 'large'
+                                        text: f'Rider on Deck: {root.rider_on_deck}'
+
+                            MDLabel:
+                                text: 'Carriers:'
+                                adaptive_height: True
+                                halign: 'center'
+                                pos_hint: {'center_x': .5, 'center_y': .5}
+                                font_style: 'Title'
+
+                            MDGridLayout:
+                                id: carrier_grid
+                                cols: 2
+                                spacing: '12dp'
+
+                            MDBoxLayout:
+                                Video:
+                                    id: fork_camera
+                                    size_hint_y: 1
+                                    adaptive_height: True
+                                    allow_stretch: True
+                                    keep_ratio: True
+
+                            MDButton:
+                                adaptive_height: True
+                                id: carrier_button
+                                on_release: root.controller.simulate_carrier()
+                                MDButtonText:
+                                    text: 'Similate Carrier Pass'
