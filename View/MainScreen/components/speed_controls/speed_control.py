@@ -25,7 +25,6 @@ class SpeedControl(MDBoxLayout):
 
 
     def on_speed_presets(self, instance, value):
-        print('on speed presets')
         if self.ids.speed_box.children:
             self.ids.speed_box.clear_widgets()
         if not value:
@@ -43,14 +42,24 @@ class SpeedControl(MDBoxLayout):
                 button.state = 'down'
             self.ids.speed_box.add_widget(button)
 
+    def set_speed_to_zero(self):
+        # Iterate through the children of the speed_box to find the 'Zero' button
+        print('set speed to zero')
+        for child in self.ids.speed_box.children:
+            if child.text == 'Zero':
+                # Set the state of the 'Zero' button to 'down'
+                child.state = 'down'
+                # Call set_speed to apply the speed change
+                self.set_speed(child)
+            else:
+                child.state = 'normal'
+
     def on_disabled(self, instance, value):
         for child in self.ids.speed_box.children:
             child.disabled = value
 
     def set_speed(self, instance):
-        print(f'state: {instance.state}')
         if instance.state == 'down':
-            print('Button pressed:', instance.text)
             instance.style = 'filled'
             self.speed = instance.value
         else:

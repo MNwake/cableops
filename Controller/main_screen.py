@@ -24,7 +24,8 @@ class MainScreenController:
     def get_view(self) -> MainScreenView:
         return self.view
 
-    def start_cable(self):
+    def start_cable(self, dt=None):
+        print('start cable controller')
         if self.model.cable.e_brake:
             self.view.emergency_brake_error()
             return
@@ -34,6 +35,7 @@ class MainScreenController:
     def stop_cable(self):
         print('stop cable')
         self.model.cable.stop()
+        self.view.ids.speed_control.set_speed_to_zero()
         self.model.notify_observers('main screen')
 
     def adjust_speed(self, value):
@@ -41,8 +43,7 @@ class MainScreenController:
         self.model.notify_observers('main screen')
 
     def change_direction(self, instance):
-        self.model.cable.stop()
-        print('change direction', instance.is_cable_going_forward)
+        self.stop_cable()
         if instance.is_cable_going_forward:
             print('change direction to false')
             self.model.cable.forward = False
@@ -53,13 +54,12 @@ class MainScreenController:
         self.model.notify_observers('main screen')
 
     def send_rope(self):
-        self.model.cable.magazine.engage()
+        self.model.cable.toggle_magazine()
         self.model.notify_observers('main screen')
 
 
     def rider_on_deck(self, rider):
         print('rider on deck')
-        self.view.riders_list_menu.dismiss()
         self.model.rider_on_deck = rider
 
     def clear_on_deck(self):
@@ -67,6 +67,8 @@ class MainScreenController:
 
     def engage_fork(self):
         self.model.cable.toggle_fork()
+        self.model.notify_observers('main screen')
+
 
     def simulate_carrier(self):
         print('simulate carrier')
@@ -75,6 +77,7 @@ class MainScreenController:
 
     def emergency_brake(self, root):
         self.model.cable.emergency_stop()
+        self.stop_cable()
         self.model.notify_observers('main screen')
         self.view.lock_controls(root.ids.lock_button)
 
@@ -82,4 +85,6 @@ class MainScreenController:
         self.model.cable.e_brake = False
 
     def update_checked_in_riders(self, text):
+        if text == 'Select Rider':
+            text = ''
         self.model.update_rider_list(text)

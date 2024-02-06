@@ -5,7 +5,7 @@ from kivymd.uix.card import MDCard
 class CarrierCard(MDCard):
     number = StringProperty()
     name = StringProperty()
-    lap_count = StringProperty()
+    lap_count = StringProperty(defaultvalue='0')
     active = BooleanProperty(defaultvalue=False)
     carrier = ObjectProperty(allownone=True)
     active_thread = ObjectProperty(allownone=True)
@@ -15,7 +15,6 @@ class CarrierCard(MDCard):
 
 
     def on_carrier(self, instance, value):
-        print('carrier updated')
         if value is None:
             self.name = 'Empty'
             self.lap_count = ''
@@ -23,7 +22,6 @@ class CarrierCard(MDCard):
 
         self.number = str(value.number)
         if value.rider:
-            print('carrier has rider', value.rider.full_name)
             self.name = value.rider.full_name
             self.lap_count = str(value.lap_count)
             if value.lap_count > 5: # TODO implement lap limit

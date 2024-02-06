@@ -75,22 +75,33 @@
                                 on_speed: root.controller.adjust_speed(self.speed)
 
                             MDDivider:
+                                color:
                                 size_hint_x: 1
                                 pos_hint: {'center_x': .5, 'center_y': .5}
 
+
+                            RiderSearch:
+                                id: rider_search
+                                rider_on_deck: root.rider_on_deck
+                                clear: root.clear_search
+                                on_focus: root.focus_rider_search(*args)
+                                on_text: root.controller.update_checked_in_riders(self.text)
+
+                            MDRecycleView:
+                                id: rv
+                                key_viewclass: "viewclass"
+                                key_size: "height"
+
+                                RecycleBoxLayout:
+                                    padding: dp(10)
+                                    default_size: None, dp(48)
+                                    default_size_hint: 1, None
+                                    size_hint_y: None
+                                    height: self.minimum_height
+                                    orientation: "vertical"
+
                             MDBoxLayout:
                                 adaptive_height: True
-                                orientation: 'vertical'
-
-                                RiderSearch:
-                                    id: rider_search
-                                    rider_on_deck: root.rider_on_deck
-                                    on_focus: root.focus_rider_search(*args)
-                                    on_text: root.controller.update_checked_in_riders(self.text)
-
-
-
-                            MDBoxLayout:
                                 MDButton:
                                     id: fork_button
                                     style: 'elevated'
@@ -114,7 +125,7 @@
                                     on_release: root.send_pressed()
 
                                     MDButtonText:
-                                        text: 'Send'
+                                        text: 'Disengage' if root.magazine else 'Send'
                                         pos_hint: {"center_x": .5, "center_y": .5}
 
                             MDDivider:
@@ -131,13 +142,19 @@
                             MDBoxLayout:
                                 orientation: 'vertical'
                                 adaptive_height: True
-                                MDLabel:
-                                    font_style: 'Label'
-                                    role: 'large'
-                                    text: f'Cable {root.status}'
 
                                 MDBoxLayout:
-                                    adaptive_height: True
+                                    MDLabel:
+                                        font_style: 'Label'
+                                        role: 'large'
+                                        text: f'Cable {root.status}'
+
+                                    MDLabel:
+                                        font_style: 'Label'
+                                        role: 'large'
+                                        text: f'Direction: {root.direction}'
+
+                                MDBoxLayout:
                                     MDLabel:
                                         font_style: 'Label'
                                         role: 'large'
@@ -147,6 +164,7 @@
                                         font_style: 'Label'
                                         role: 'large'
                                         text: f'Magazine Engaged: {root.magazine}'
+
                                 MDBoxLayout:
                                     MDLabel:
                                         font_style: 'Label'
@@ -157,6 +175,8 @@
                                         role: 'large'
                                         text: f'Rider on Deck: {root.rider_on_deck}'
 
+                            MDDivider:
+
                             MDLabel:
                                 text: 'Carriers:'
                                 adaptive_height: True
@@ -164,18 +184,48 @@
                                 pos_hint: {'center_x': .5, 'center_y': .5}
                                 font_style: 'Title'
 
+
                             MDGridLayout:
                                 id: carrier_grid
                                 cols: 2
                                 spacing: '12dp'
 
+                            MDDivider:
                             MDBoxLayout:
-                                Video:
-                                    id: fork_camera
-                                    size_hint_y: 1
-                                    adaptive_height: True
-                                    allow_stretch: True
-                                    keep_ratio: True
+                                size_hint_y: .5
+
+                                MDBoxLayout:
+                                    orientation: 'vertical'
+                                    MDLabel:
+                                        adaptive_height: True
+                                        text: 'Fork Camera'
+                                        font_style: 'Headline'
+                                        role: 'small'
+                                        halign: 'center'
+
+                                    Video:
+                                        id: fork_camera
+                                        adaptive_height: True
+
+
+                                MDDivider:
+                                    orientation: 'vertical'
+
+                                MDBoxLayout:
+                                    orientation: 'vertical'
+
+
+                                    MDLabel:
+                                        adaptive_height: True
+                                        text: 'Send Camera'
+                                        font_style: 'Headline'
+                                        role: 'small'
+                                        halign: 'center'
+                                    Video:
+                                        id: send_camera
+                                        adaptive_height: True
+
+                            MDDivider:
 
                             MDButton:
                                 adaptive_height: True

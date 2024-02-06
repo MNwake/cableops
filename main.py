@@ -30,8 +30,8 @@ def sync_files():
     rsync_command = [
         "rsync",
         "-avz",
-        "/Users/theokoester/dev/projects/python/CWA/",
-        "theokoester@raspi:/home/theokoester/dev/cwa/"
+        "/Users/theokoester/dev/projects/python/CWA/cableops/",
+        "theokoester@raspi:/home/theokoester/dev/cableops/"
     ]
     try:
         result = subprocess.run(rsync_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -91,5 +91,13 @@ class CableOps(MDApp):
         if 'linux' in sys.platform:
             print('gpio cleanup')
             gpio.cleanup()
+
+    def switch_theme_style(self):
+        self.theme_cls.primary_palette = (
+            "Blue" if self.theme_cls.primary_palette == "White" else "White"
+        )
+        self.theme_cls.theme_style = (
+            "Dark" if self.theme_cls.theme_style == "Light" else "Light"
+        )
 
 CableOps().run()

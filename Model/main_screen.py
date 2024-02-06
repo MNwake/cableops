@@ -44,16 +44,16 @@ class MainScreenModel(BaseScreenModel):
         self.notify_observers('main screen')
 
     def on_carrier_pass(self):
-        print('model on carrier pass')
         self.rider_on_deck = self.cable.rider_on_deck
-        print('rider_on_deck_model:', self.rider_on_deck)
         self.update_rider_list()
 
     def update_rider_list(self, name=None):
         # Get a set of riders who are currently on carriers
-        # self.riders_on_carriers = {carrier.rider for carrier in self.cable.carriers if carrier.rider}
+        self.riders_on_carriers = {carrier.rider for carrier in self.cable.carriers if carrier.rider}
+
         # Filter out these riders from the main rider list
-        filtered_riders = [rider for rider in self.cable.park.riders_checked_in]
+        # Include only riders not in riders_on_carriers
+        filtered_riders = [rider for rider in self.cable.park.riders_checked_in if rider not in self.riders_on_carriers]
 
         # Additional filtering based on the 'text' if provided
         if name:
@@ -61,6 +61,6 @@ class MainScreenModel(BaseScreenModel):
             filtered_riders = [rider for rider in filtered_riders if text in rider.full_name.lower()]
 
         self.riders_checked_in = filtered_riders
-        print(self.riders_checked_in)
         # Notify observers about the update
         self.notify_observers('main screen')
+

@@ -8,7 +8,6 @@ class DirectionButton(MDButton):
     text = StringProperty(defaultvalue='Forward')
 
     def on_is_cable_going_forward(self, instance, value):
-        print("on is cable going forward")
         if value:
             self.icon = 'fast-forward'
             self.text = 'Forward'

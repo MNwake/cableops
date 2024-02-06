@@ -17,7 +17,6 @@ class DrawerItem(MDNavigationDrawerItem):
 
     def __init__(self, **kwargs):
         super(DrawerItem, self).__init__(**kwargs)
-        print('drawer item')
 
     def on_text(self, instance, value):
         print('on_text:', value)

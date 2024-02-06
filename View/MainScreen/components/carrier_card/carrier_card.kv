@@ -1,6 +1,4 @@
 <CarrierCard>:
-    size_hint_y: None
-    minimum_height: '64dp'
     spacing: '12dp'
     padding: '12dp'
     MDLabel:
@@ -18,10 +16,10 @@
         MDLabel:
             text: root.name
             font_style: 'Title'
-            role: 'small'
+            role: 'large'
 
 
         MDLabel:
-            text: root.lap_count
+            text: f'Lap: {root.lap_count}'
             font_style: 'Label'
-            role: 'small'
+            role: 'large'

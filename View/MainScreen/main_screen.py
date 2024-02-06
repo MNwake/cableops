@@ -1,3 +1,5 @@
+import sys
+
 import cv2
 import time
 from kivy.graphics.texture import Texture
@@ -5,8 +7,7 @@ from kivy.graphics.texture import Texture
 from kivy.properties import StringProperty, BooleanProperty, ObjectProperty, Clock
 from kivymd.uix.menu import MDDropdownMenu
 
-from View.MainScreen.components import PowerButton, EmergencyBrake, SpeedControl, DirectionButton, MyTopAppBar, RiderSearch, CustomOneLineIconListItem # NOQA
-from View.MainScreen.components.carrier_card import CarrierCard
+from View.MainScreen.components import PowerButton, EmergencyBrake, SpeedControl, DirectionButton, MyTopAppBar, RiderSearch, CustomOneLineIconListItem, CarrierCard  # NOQA
 from View.MainScreen.components.nav_drawer.nav_drawer import MyNavDrawer, DrawerItem
 from View.base_screen import BaseScreenView
 
@@ -30,16 +31,11 @@ class MainScreenView(BaseScreenView):
         self.nav_drawer = MyNavDrawer()
         self.ids.nav_layout.add_widget(self.nav_drawer)
         self.nav_drawer.set_state('close')
-        self.riders_list_menu = MDDropdownMenu(
-            caller=self.ids.rider_search,
-            position='bottom'
-
-        )
         self.riders_list_menu_is_open = False  # Flag to track if the menu is open
-
         self.set_carriers()
 
-        Clock.schedule_interval(self.update_video, 1/24)
+        if sys.platform == 'darwin':
+            Clock.schedule_interval(self.update_video, 1/24)
 
 
     def model_is_changed(self):
@@ -52,7 +48,7 @@ class MainScreenView(BaseScreenView):
         else:
             self.rider_on_deck = 'Select Rider'
         self.update_riders_dropdown(self.model.riders_checked_in)
-
+        self.direction = 'Forward' if self.model.cable.forward else 'Reverse'
         self.status = 'On' if self.model.cable.running else 'Off'
         self.magazine = self.model.cable.magazine.engaged
         self.fork = self.model.cable.fork.engaged
@@ -61,6 +57,7 @@ class MainScreenView(BaseScreenView):
         self.active_carrier = self.model.cable.active_carrier
 
     def update_video(self, dt):
+
 
         def frame_to_texture(frame):
             buf = cv2.flip(frame, 0).tostring()
@@ -72,6 +69,8 @@ class MainScreenView(BaseScreenView):
         if frame is not None:
             texture = frame_to_texture(frame)
             self.ids.fork_camera.texture = texture
+            self.ids.send_camera.texture = texture
+
     def on_active_carrier(self, instance, value):
         if value.rider:
             self.active_rider_name = value.rider.full_name
@@ -94,29 +93,28 @@ class MainScreenView(BaseScreenView):
         for carrier in self.model.cable.carriers:
             self.ids.carrier_grid.add_widget(CarrierCard(carrier=carrier))
 
-
     def focus_rider_search(self, instance, focus):
         if focus and instance.text == 'Select Rider':
             instance.text = ''
         elif not focus and instance.text == '':
             instance.text = 'Select Rider'
-        if focus:
-            self.open_riders_list_menu()
-        if not focus:
-            self.close_riders_list_menu()
+        # if focus:
+        #     self.open_riders_list_menu()
+        # if not focus:
+        #     self.close_riders_list_menu()
 
-    def open_riders_list_menu(self):
-        if not self.riders_list_menu_is_open:
-            self.riders_list_menu.position = 'bottom'
-            self.riders_list_menu.open()
-            self.riders_list_menu_is_open = True
+    def clear_search(self, instance, text):
+        print('clear_search')
+        print(self.rider_on_deck)
+        instance.rider_on_deck = ''
+        instance.text = instance.rider_on_deck
 
-    def close_riders_list_menu(self):
-        if self.riders_list_menu_is_open:
-            self.riders_list_menu.dismiss()
-            self.riders_list_menu_is_open = False
+
 
     def on_settings_callback(self):
+        self.app.theme_cls.theme_style_switch_animation = True
+        self.app.theme_cls.theme_style_switch_animation_duration = 0.8
+        self.app.switch_theme_style()
         print('settings icon')
 
     def on_menu_callback(self):
@@ -125,14 +123,18 @@ class MainScreenView(BaseScreenView):
     def update_riders_dropdown(self, riders):
 
         def add_rider_item(rider):
-            self.riders_list_menu.items.append(
+            self.ids.rv.data.append(
                 {
+                    "viewclass": "CustomOneLineIconListItem",
+                    # "text": f"{style} {role} {font_size} sp",
+                    # "font_style": style,
+                    # "role": role,
                     "text": rider.full_name,
                     "on_release": lambda x=rider: self.controller.rider_on_deck(x),
                 }
             )
 
-        self.riders_list_menu.items = []
+        self.ids.rv.data = []
         for rider in riders:
             add_rider_item(rider)
 
