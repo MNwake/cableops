@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "the-cwa",
+  "private_key_id": "4df1775855c1607245c28a80364ed9b13a7c20ae",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC9hYVg8nfq6Q1N\nJ3nHmTiFgCFwxHdDfq6cgSZKwwuvu9zUnwj5HQYhI2F9d4L+H/bmbOsqvY9Aeket\nAJAFEyjUtAn/MBIPcsiS6ZBHDP5A+A6BNRcRexO1sxAYWPptBMhYS/1JxM/YNJOy\n88aWTGRaLrmRMWS27DgIPzeP+48DSxjJsol8Oju9Li++qsuDRRK8P9Jys9+9K4rH\nAiUlq6fGuc7CYRXBH8zEqDPSQfUNbCV7FYcDrEhla5YCzzE8WVcTfDWie2jmjidM\nPLmjFe6Z4hZij3hoxXxDIrcQrRuJKLUvJ2v/QqmTA9tKhlE4P6LrEpuk8T6aLiSo\nFEQxG/TVAgMBAAECggEAWfUcK7m7gOXRGfuwWrUYNonslY2zvHZPpFrLFbaCAA6Q\nUd4REMmdhLI6DqdhJoV+mL4/W8CxU94W0n/PXJFNErVIf3fOQsXtfYpeoNMChk0X\n+W19Px9n6hmN/LiTWZbpD7w2BENmko3WQ51heCrXgVTnYQsMbqUuLX/wPCggKGO2\nN9SHKoKQqURaN6HMLa97uhqhmB7d7uRnV3BmjlTHaUWUkBGwriTEnUJ6ZntBSdyp\nSKpccYvb8P7re3z2Gj0Ob7+J3ADV8eFHfEiKjD1JjABbbqcI131wzC/s+aU4DZqG\n6UrNK8zXu9gVrXthkO7fB63w71fIvLWnypKz3RBPewKBgQDiZGAI4eAM1zbVZpES\nLfmmS3ZnBZ80bUn24ApBfaTkcVrwEUlrblyNF2B2rN4mRtXkrmg3WsN0nlLHyZoz\nN6NZM89oGjRnkgT2Ed2pWVmP0TQLQAxjzYyyIfkqbObaZn+UnZaBElKGHNcLOqgj\nGoLczmJ1PZfX2mM11cUz+2/krwKBgQDWTrfFVN5U3ue5pGaBytCm8Y0eyVvWcvcI\nyIqxFYFSyC06BIidEBIvKgKiWuvyUW6KU+DySdGlEGLWq/0hJgsVZCZn089639sX\n+aZnFSFDCz22BEkGfQZ/Htb5FGK7rsev/G7W6iPPupBcbJsfFy/tAzrzz3NwXY25\nzQikztrnuwKBgG93lIFLFZG89ValJZCZ6m2igi2/at/ZX62aKfKM9n80AN5q5Ids\n00z00Z4dB1Q5VF9AMDfxDIOC4KdV8AJ/xoHJLLnJDTxhfOfbbBRR1fMlwkY3xuHs\n9vVOHOxyqkemZ/K4lL4AU3mNAaSZwOdnyj8FrxyisvyonmiHVI1/o1wpAoGBAMEZ\n9OTN7/exUkMoK2VQBmomxO20qhe1R3qWmMGvivO4g2f/pclALeJpjC4Wlvuk/GGP\n6uTmNwzwkt6z4kX4LYx8zU5IwG8LPjOAM7w2gd4TRuu3OMWr6iqo8zNEdyJ9/lhI\nsObd2p7WkDV3dt6w2fJKMth1WKMq6QU+BkfaS8z5AoGBALXlBQF1xpxsE1v/Gcd2\nJvdVrZBzzYlPnm+BL8VCcKYNJMbiZ/BzHu9A3R7z/SjyV65MKouHK2C7+WBvOBTk\nlSYF4Sv0mP85qXWoOXfBlrNrrtf97k0i2G24vxchhcupmMMYUxPpkwy1neF8q438\nEa4jZrsr06bu4bRRRLhOF9I0\n-----END PRIVATE KEY-----\n",
+  "client_email": "thecwa@the-cwa.iam.gserviceaccount.com",
+  "client_id": "102018344903100248223",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/thecwa%40the-cwa.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

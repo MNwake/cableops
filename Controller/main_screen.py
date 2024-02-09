@@ -3,7 +3,7 @@ import time
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 
-from View.MainScreen.main_screen import MainScreenView
+from View.MainScreen.main_screen import CableMainScreen
 
 
 class MainScreenController:
@@ -16,12 +16,12 @@ class MainScreenController:
 
     def __init__(self, model):
         self.model = model  # Model.main_screen.MainScreenModel
-        self.view = MainScreenView(controller=self, model=self.model)
+        self.view = CableMainScreen(controller=self, model=self.model)
         self.model.update_rider_list()
 
 
 
-    def get_view(self) -> MainScreenView:
+    def get_view(self) -> CableMainScreen:
         return self.view
 
     def start_cable(self, dt=None):

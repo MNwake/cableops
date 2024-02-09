@@ -1,5 +1,5 @@
-from cwa.Cable import Cable
-from cwa.Events import Rider, Park
+from database.Cable import Cable
+from database.Events import Rider, Park
 
 from Model.base_model import BaseScreenModel
 
@@ -48,12 +48,23 @@ class MainScreenModel(BaseScreenModel):
         self.update_rider_list()
 
     def update_rider_list(self, name=None):
-        # Get a set of riders who are currently on carriers
-        self.riders_on_carriers = {carrier.rider for carrier in self.cable.carriers if carrier.rider}
+        # Initialize an empty set for riders on carriers
+        self.riders_on_carriers = set()
 
-        # Filter out these riders from the main rider list
-        # Include only riders not in riders_on_carriers
-        filtered_riders = [rider for rider in self.cable.park.riders_checked_in if rider not in self.riders_on_carriers]
+        # Check if cable and carriers are set
+        if self.cable and self.cable.carriers:
+            # Get a set of riders who are currently on carriers
+            self.riders_on_carriers = {carrier.rider for carrier in self.cable.carriers if carrier.rider}
+
+        # Initialize an empty list for filtered riders
+        filtered_riders = []
+
+        # Check if park and riders_checked_in are set
+        if self.cable.park and self.cable.park.riders_checked_in:
+            # Filter out these riders from the main rider list
+            # Include only riders not in riders_on_carriers
+            filtered_riders = [rider for rider in self.cable.park.riders_checked_in if
+                               rider not in self.riders_on_carriers]
 
         # Additional filtering based on the 'text' if provided
         if name:
@@ -63,4 +74,5 @@ class MainScreenModel(BaseScreenModel):
         self.riders_checked_in = filtered_riders
         # Notify observers about the update
         self.notify_observers('main screen')
+
 

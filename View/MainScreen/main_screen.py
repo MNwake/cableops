@@ -10,9 +10,10 @@ from kivymd.uix.menu import MDDropdownMenu
 from View.MainScreen.components import PowerButton, EmergencyBrake, SpeedControl, DirectionButton, MyTopAppBar, RiderSearch, CustomOneLineIconListItem, CarrierCard  # NOQA
 from View.MainScreen.components.nav_drawer.nav_drawer import MyNavDrawer, DrawerItem
 from View.base_screen import BaseScreenView
+from database import Rider
 
 
-class MainScreenView(BaseScreenView):
+class CableMainScreen(BaseScreenView):
     status = StringProperty()
     direction = StringProperty()
     speed = StringProperty()
@@ -98,10 +99,6 @@ class MainScreenView(BaseScreenView):
             instance.text = ''
         elif not focus and instance.text == '':
             instance.text = 'Select Rider'
-        # if focus:
-        #     self.open_riders_list_menu()
-        # if not focus:
-        #     self.close_riders_list_menu()
 
     def clear_search(self, instance, text):
         print('clear_search')
@@ -171,3 +168,10 @@ class MainScreenView(BaseScreenView):
             return
 
         self.controller.send_rope()
+
+    def update_db(self):
+        new_image_path = "assets/images/default-avatar.png"  # New path relative to the static files directory
+
+        for rider in Rider.objects().all():
+            rider.set_image(new_image_path)
+            rider.save()

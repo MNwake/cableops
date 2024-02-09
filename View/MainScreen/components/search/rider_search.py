@@ -15,6 +15,7 @@ class MyTrailingIcon(MDTextFieldTrailingIcon, ButtonBehavior):
 class RiderSearch(MDTextField):
     rider_on_deck = StringProperty()
     clear = ObjectProperty()
+
     def clear_text(self):
         if self.clear:
             self.clear(self, self.text)

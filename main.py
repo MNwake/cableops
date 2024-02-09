@@ -13,18 +13,35 @@ https://en.wikipedia.org/wiki/Model–view–controller
 import sys
 import threading
 
-from cwa import DataBase
+from database import DataBase
+
+
 from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 from View.screens import screens
-from web.web_server import app as web_server
+from web.web_server import FastAPIApp
 
 if 'linux' in sys.platform:
     import RPi.GPIO as gpio
     Window.size = (1000, 900)
 
 import subprocess
+
+import firebase_admin
+from firebase_admin import credentials, storage
+
+if sys.platform == 'linux':
+    cred = credentials.Certificate('/home/theokoester/dev/cableops/server/database/the-cwa-4df1775855c1.json')
+    firebase_admin.initialize_app(cred, {
+        'storageBucket': 'the-cwa.appspot.com'
+    })
+else:
+    cred = credentials.Certificate('database/the-cwa-4df1775855c1.json')
+    firebase_admin.initialize_app(cred, {
+        'storageBucket': 'the-cwa.appspot.com'
+    })
+
 
 def sync_files():
     rsync_command = [
@@ -34,6 +51,7 @@ def sync_files():
         "theokoester@raspi:/home/theokoester/dev/cableops/"
     ]
     try:
+        print('rsync')
         result = subprocess.run(rsync_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print("Rsync completed successfully")
         print(result.stdout.decode())
@@ -56,12 +74,12 @@ class CableOps(MDApp):
             sync_files()
         
     def build(self) -> MDScreenManager:
-        self.theme_cls.primary_palette = 'Blue'
+        self.theme_cls.primary_palette = 'Aliceblue'
         self.theme_cls.theme_style = 'Dark'
         self.theme_cls.dynamic_color = True
         self.generate_application_screens()
         if 'linux' in sys.platform:
-            self.start_flask_server()
+            self.start_fastapi_server()
         return self.manager_screens
 
     def generate_application_screens(self) -> None:
@@ -82,10 +100,10 @@ class CableOps(MDApp):
             view.name = name_screen
             self.manager_screens.add_widget(view)
 
-    def start_flask_server(self):
-        # Run Flask server in a separate thread
-        self.flask_thread = threading.Thread(target=web_server.run, kwargs={"host": "0.0.0.0", "port": 5000})
-        self.flask_thread.start()
+    def start_fastapi_server(self):
+        self.fastapi_app = FastAPIApp()
+        self.fastapi_thread = threading.Thread(target=self.fastapi_app.run)
+        self.fastapi_thread.start()
 
     def on_stop(self):
         if 'linux' in sys.platform:
