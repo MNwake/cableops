@@ -1,5 +1,6 @@
+import random
 import sys
-
+from datetime import datetime
 import cv2
 import time
 from kivy.graphics.texture import Texture
@@ -10,7 +11,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from View.MainScreen.components import PowerButton, EmergencyBrake, SpeedControl, DirectionButton, MyTopAppBar, RiderSearch, CustomOneLineIconListItem, CarrierCard  # NOQA
 from View.MainScreen.components.nav_drawer.nav_drawer import MyNavDrawer, DrawerItem
 from View.base_screen import BaseScreenView
-from database import Rider
+from database import Rider, Scorecard, Park
 
 
 class CableMainScreen(BaseScreenView):
@@ -170,8 +171,4 @@ class CableMainScreen(BaseScreenView):
         self.controller.send_rope()
 
     def update_db(self):
-        new_image_path = "assets/images/default-avatar.png"  # New path relative to the static files directory
-
-        for rider in Rider.objects().all():
-            rider.set_image(new_image_path)
-            rider.save()
+        pass

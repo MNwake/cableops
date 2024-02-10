@@ -14,7 +14,7 @@ class Scorecard(db.Document):
     difficulty = db.FloatField()
     score = db.FloatField()
     landed = db.BooleanField()
-    contest = db.ReferenceField("Contest")
+    park = db.ReferenceField("Park")
     rider = db.ReferenceField("User")
     judge = db.ReferenceField("Judge")
 

@@ -1,23 +1,39 @@
-import os
-
 import sys
-from datetime import datetime
 from pprint import pprint
-from typing import Optional
+from typing import Optional, List
 
 from bson import ObjectId
-from fastapi import FastAPI, HTTPException
-from fastapi.encoders import jsonable_encoder
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 from database import DataBase
 from database.Events import Rider, Park
-
+from utils import build_rider_query
+import uvicorn
 
 app = FastAPI()
+# MongoDB connection
+DataBase()
 if sys.platform == 'linux':
     app.mount("/static", StaticFiles(directory="/home/theokoester/dev/cableops/server/assets/images"), name="static")
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, data: str):
+        for connection in self.active_connections:
+            await connection.send_text(data)
+
+
 def custom_encoder(obj):
     if isinstance(obj, ObjectId):
         return str(obj)
@@ -27,9 +43,6 @@ def custom_encoder(obj):
         return {key: custom_encoder(value) for key, value in obj.items()}
     return obj
 
-# MongoDB connection up\dsyr
-DataBase()
-import uvicorn
 
 class FastAPIApp:
     def __init__(self):
@@ -41,35 +54,26 @@ class FastAPIApp:
         async def read_root():
             return {"Hello": "World"}
 
+        @self.app.get("/ping")
+        async def ping():
+            return {"status": "OK"}
+
         @self.app.get("/riders/")
         async def get_riders(
                 home_park: Optional[str] = None,
-                min_age: Optional[int] = None,
-                max_age: Optional[int] = None,
+                min_age: Optional[int] = 0,
+                max_age: Optional[int] = 100,
                 gender: Optional[str] = None,
                 stance: Optional[str] = None,
                 year_started: Optional[int] = None
         ):
-            query = {}
-            if home_park:
-                query["home_park"] = home_park
-            if gender:
-                query["gender"] = gender
-            if stance:
-                query["stance"] = stance
-            if year_started:
-                query["year_started"] = year_started
-            if min_age or max_age:
-                current_year = datetime.now().year
-                if min_age:
-                    min_birth_year = current_year - min_age
-                    query["date_of_birth__lte"] = datetime(min_birth_year, 1, 1)
-                if max_age:
-                    max_birth_year = current_year - max_age
-                    query["date_of_birth__gte"] = datetime(max_birth_year, 1, 1)
+            query = build_rider_query(home_park=home_park, min_age=min_age, max_age=max_age, gender=gender,
+                                      stance=stance, year_started=year_started)
 
             riders = Rider.objects(__raw__=query).all()
+
             riders_list = [custom_encoder(rider.to_mongo().to_dict()) for rider in riders]
+            print(riders_list)
             return riders_list
 
         @self.app.get('/parks/')
@@ -78,7 +82,6 @@ class FastAPIApp:
             parks_list = [custom_encoder(park.to_mongo()) for park in parks]
             pprint(parks_list)
             return parks_list
-
 
     def run(self):
         uvicorn.run(self.app, host="0.0.0.0", port=8000)
