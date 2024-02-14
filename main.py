@@ -13,14 +13,13 @@ https://en.wikipedia.org/wiki/Model–view–controller
 import sys
 import threading
 
-from database import DataBase
+from kivy.clock import Clock
 
-
+from database import FastAPIApp, DataBase
 from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 from View.screens import screens
-from web.web_server import FastAPIApp
 
 if 'linux' in sys.platform:
     import RPi.GPIO as gpio
@@ -47,8 +46,9 @@ def sync_files():
     rsync_command = [
         "rsync",
         "-avz",
-        "/Users/theokoester/dev/projects/python/CWA/cableops/",
-        "theokoester@raspi:/home/theokoester/dev/cableops/"
+        "--delete",  # Add this line
+        "/Users/theokoester/dev/projects/python/CWA/cableops/",  # Source directory on Mac
+        "theokoester@raspi:/home/theokoester/dev/cableops/"  # Destination directory on Raspberry Pi
     ]
     try:
         print('rsync')
@@ -60,26 +60,30 @@ def sync_files():
         print(e.stderr.decode())
 
 
+fastapi_app = FastAPIApp()
+
+def start_fastapi_server():
+    fastapi_thread = threading.Thread(target=fastapi_app.run)
+    fastapi_thread.start()
+
+# Start the FastAPI server
+if 'linux' in sys.platform:
+    start_fastapi_server()
 
 class CableOps(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.load_all_kv_files(self.directory)
-        # This is the screen manager that will contain all the screens of your
-        # application.
         self.connection = DataBase()
         self.manager_screens = MDScreenManager()
-        print(sys.platform)
-        if 'darwin' in sys.platform:
-            sync_files()
-        
+        self.fastapi = fastapi_app
+
+
     def build(self) -> MDScreenManager:
         self.theme_cls.primary_palette = 'Aliceblue'
         self.theme_cls.theme_style = 'Dark'
         self.theme_cls.dynamic_color = True
         self.generate_application_screens()
-        if 'linux' in sys.platform:
-            self.start_fastapi_server()
         return self.manager_screens
 
     def generate_application_screens(self) -> None:
@@ -100,15 +104,11 @@ class CableOps(MDApp):
             view.name = name_screen
             self.manager_screens.add_widget(view)
 
-    def start_fastapi_server(self):
-        self.fastapi_app = FastAPIApp()
-        self.fastapi_thread = threading.Thread(target=self.fastapi_app.run)
-        self.fastapi_thread.start()
-
     def on_stop(self):
-        if 'linux' in sys.platform:
-            print('gpio cleanup')
-            gpio.cleanup()
+        # if 'linux' in sys.platform:
+        #     print('gpio cleanup')x
+        #     gpio.cleanup()
+        pass
 
     def switch_theme_style(self):
         self.theme_cls.primary_palette = (
@@ -118,4 +118,13 @@ class CableOps(MDApp):
             "Dark" if self.theme_cls.theme_style == "Light" else "Light"
         )
 
-CableOps().run()
+if __name__ == '__main__':
+    # Sync files from Mac to Raspberry Pi
+    if 'darwin' in sys.platform:
+        sync_files()
+
+    if 'linux' in sys.platform:
+        start_fastapi_server()
+
+    # Run Kivy application
+    CableOps().run()

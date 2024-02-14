@@ -1,6 +1,8 @@
 from mongoengine import EmbeddedDocument, BooleanField
 
-from database.Cable import StepperMotor
+from database.cable import StepperMotor
+
+
 
 
 class Magazine(EmbeddedDocument):

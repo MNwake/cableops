@@ -1,17 +1,12 @@
-import random
 import sys
-from datetime import datetime
+
 import cv2
-import time
 from kivy.graphics.texture import Texture
-
 from kivy.properties import StringProperty, BooleanProperty, ObjectProperty, Clock
-from kivymd.uix.menu import MDDropdownMenu
 
-from View.MainScreen.components import PowerButton, EmergencyBrake, SpeedControl, DirectionButton, MyTopAppBar, RiderSearch, CustomOneLineIconListItem, CarrierCard  # NOQA
-from View.MainScreen.components.nav_drawer.nav_drawer import MyNavDrawer, DrawerItem
+from View.MainScreen.components import CarrierCard  # NOQA
+from View.MainScreen.components.nav_drawer.nav_drawer import MyNavDrawer
 from View.base_screen import BaseScreenView
-from database import Rider, Scorecard, Park
 
 
 class CableMainScreen(BaseScreenView):
@@ -170,5 +165,10 @@ class CableMainScreen(BaseScreenView):
 
         self.controller.send_rope()
 
+
     def update_db(self):
-        pass
+       pass
+
+
+
+

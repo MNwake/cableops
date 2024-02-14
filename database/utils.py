@@ -12,14 +12,17 @@ color_dict = {
     "white": [1, 1, 1, 0.2],
 }
 
+
 def build_rider_query(home_park: Optional[str] = None,
-                min_age: Optional[int] = 0,
-                max_age: Optional[int] = 100,
-                gender: Optional[str] = None,
-                stance: Optional[str] = None,
-                year_started: Optional[int] = None
-        ):
+                      min_age: Optional[int] = 0,
+                      max_age: Optional[int] = 100,
+                      gender: Optional[str] = None,
+                      stance: Optional[str] = None,
+                      year_started: Optional[int] = None
+                      ):
+    print('rider query')
     query = {}
+
     current_year = datetime.now().year
 
     if home_park:
@@ -41,3 +44,7 @@ def build_rider_query(home_park: Optional[str] = None,
 
     print(f"Query: {query}")  # Debugging line
     return query
+
+
+def to_str(obj_id):
+    return str(obj_id) if obj_id else None

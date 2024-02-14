@@ -1,7 +1,7 @@
 from mongoengine import Document, StringField, IntField, BooleanField, EmbeddedDocumentField, ListField, \
     FloatField, ReferenceField
 
-from database.Cable import Carrier, DCMotor, Fork, Magazine, MagneticSensor
+from database.cable import Carrier, DCMotor, Fork, Magazine, MagneticSensor
 
 
 class Cable(Document):

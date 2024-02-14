@@ -1,4 +1,3 @@
-
 from mongoengine import EmbeddedDocument, IntField, BooleanField, ReferenceField
 
 
@@ -39,4 +38,3 @@ class Carrier(EmbeddedDocument):
     def lap(self):
         if self.rider:
             self.lap_count += 1
-
