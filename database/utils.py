@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
+from bson import ObjectId
+from fastapi.encoders import jsonable_encoder
+
 bib_colors = ['red', 'blue', 'green', 'yellow']
 color_dict = {
     "red": [1, 0, 0, 0.2],
@@ -45,6 +48,35 @@ def build_rider_query(home_park: Optional[str] = None,
     print(f"Query: {query}")  # Debugging line
     return query
 
+
+def custom_json_encoder(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    return jsonable_encoder(obj)
+
+def calculate_age(birth_date: datetime) -> int:
+    # Implement age calculation from birth_date
+    today = datetime.today()
+    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+
+
+def calculate_birth_date(age: int) -> datetime:
+    """
+    Calculate the birth date corresponding to the given age.
+
+    :param age: The age for which to calculate the birth date.
+    :return: The calculated birth date.
+    """
+    # Get the current date
+    current_date = datetime.utcnow()
+
+    # Subtract the age from the current year to get the birth year
+    birth_year = current_date.year - age
+
+    # Construct the birth date using the birth year and January 1st
+    birth_date = datetime(birth_year, 1, 1)
+
+    return birth_date
 
 def to_str(obj_id):
     return str(obj_id) if obj_id else None

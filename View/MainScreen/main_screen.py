@@ -32,8 +32,7 @@ class CableMainScreen(BaseScreenView):
         self.set_carriers()
 
         if sys.platform == 'darwin':
-            Clock.schedule_interval(self.update_video, 1/24)
-
+            Clock.schedule_interval(self.update_video, 1 / 24)
 
     def model_is_changed(self):
         print('model is changed')
@@ -54,7 +53,6 @@ class CableMainScreen(BaseScreenView):
         self.active_carrier = self.model.cable.active_carrier
 
     def update_video(self, dt):
-
 
         def frame_to_texture(frame):
             buf = cv2.flip(frame, 0).tostring()
@@ -102,8 +100,6 @@ class CableMainScreen(BaseScreenView):
         instance.rider_on_deck = ''
         instance.text = instance.rider_on_deck
 
-
-
     def on_settings_callback(self):
         self.app.theme_cls.theme_style_switch_animation = True
         self.app.theme_cls.theme_style_switch_animation_duration = 0.8
@@ -131,11 +127,9 @@ class CableMainScreen(BaseScreenView):
         for rider in riders:
             add_rider_item(rider)
 
-
     def on_enter(self, *args):
         self.model_is_changed()
         self.preset_speeds = self.model.cable.speed_settings
-
 
     def emergency_brake_error(self):
         print('ebrake is active')
@@ -165,10 +159,6 @@ class CableMainScreen(BaseScreenView):
 
         self.controller.send_rope()
 
-
     def update_db(self):
-       pass
-
-
-
+        pass
 

@@ -1,7 +1,10 @@
+from typing import List
+
 import mongoengine as db
 from firebase_admin import storage
 
 from database.events import User
+from database.utils import calculate_birth_date
 
 
 class Rider(User):
@@ -12,12 +15,35 @@ class Rider(User):
 
 
     @classmethod
-    def get_riders(cls, rider_id=None):
+    def get_riders(cls, home_park_id: str, min_age: int, max_age: int, gender: str,
+                   stance: str, year_started: int, rider_id: str, name: str) -> List['Rider']:
+        query_params = {}
+        
+        # Build query parameters
+        if home_park_id:
+            query_params['home_park'] = home_park_id
+        if min_age:
+            query_params['date_of_birth__lte'] = calculate_birth_date(min_age)
+        if max_age:
+            query_params['date_of_birth__gte'] = calculate_birth_date(max_age)
+        if gender:
+            query_params['gender'] = gender.lower()
+        if stance:
+            query_params['stance'] = stance.lower()
+        if year_started:
+            query_params['year_started'] = year_started
         if rider_id:
-            return cls.objects(rider_id=rider_id).all()
-        else:
-            return cls.objects().all()
+            query_params['id'] = rider_id
+        if name:
+            query_params['$or'] = [
+                {"first_name__icontains": name.lower()},
+                {"last_name__icontains": name.lower()}
+            ]
+        
+        # Execute the query and return filtered riders
+        return cls.objects(**query_params)
 
+    @classmethod
     def set_image(self, image_path):
         try:
             # Get the storage bucket

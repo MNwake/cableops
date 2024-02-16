@@ -10,10 +10,11 @@ from .scorecard import Scorecard
 class RiderStats(db.Document):
     rider = db.ReferenceField('Rider', required=True)
     year = db.IntField(default=datetime.now().year)
-    overall = db.DictField()  # Field to store overall rankings
-    top_10 = db.DictField()  # Field to store riders top 10 scorecards
-    cwa = db.DictField()  # CWA score metrics
-    attempted = db.DictField()
+    overall = db.ListField()  # Field to store overall rankings
+    top_10 = db.ListField()  # Field to store riders top 10 scorecards
+    cwa = db.ListField()  # CWA score metrics
+    attempted = db.ListField()
+    best_trick = db.ListField()
 
     meta = {
         'indexes': [
@@ -23,6 +24,8 @@ class RiderStats(db.Document):
 
     @classmethod
     async def get_rider_stats(cls, rider_id=None):
+
+        print('get_rider_stats - rider id:', rider_id)
         if rider_id:
             return await cls.objects(rider_id=rider_id).first()
         else:
@@ -37,14 +40,12 @@ class RiderStats(db.Document):
         df['_id'] = df['_id'].astype(str)
         df['date'] = to_datetime(df['date'])
 
-        # Perform various calculations
-        self.overall = self.calculate_overall(df).to_dict()
-        self.top_10 = self.calculate_top_10(df).to_dict()
-        self.cwa = self.calculate_cwa(df).to_dict()
-        self.attempted = self.calculate_attempted(df).to_dict()
+        self.overall = self.calculate_overall(df)
+        self.top_10 = self.calculate_top_10(df)
+        self.cwa = self.calculate_cwa(df)
+        self.attempted = self.calculate_attempted(df)
+        self.best_trick = self.calculate_best_trick(df)
 
-        # Save or update rankings
-        self.save()
 
         end_time = time.time()  # End the timer
         execution_time = end_time - start_time  # Calculate the duration
@@ -52,108 +53,100 @@ class RiderStats(db.Document):
         return self
 
     def calculate_overall(self, df):
-        # Calculate total and landed counts for each section
-        total_count = df.groupby('section').size().rename('total_count')
-        landed_count = df[df['landed']].groupby('section').size().rename('landed_count')
+        # Step 1: Filter out scorecards where landed is False
+        landed_df = df[df['landed']]
 
-        # Calculate landing percentage and rename it to land_rate
-        land_rate_sections = (landed_count / total_count).rename('land_rate').fillna(0) * 100
+        # Step 2: Calculate summary statistics for each section
+        section_summary = landed_df.groupby('section')['score'].describe()
 
-        # Calculate summary statistics for landed scorecards in each section
-        landed_df = df[df['landed'] == True]
-        grouped = landed_df.groupby('section')
-        section_summary = grouped['score'].describe()
+        # Step 3: Calculate summary statistics for division, execution, difficulty, and creativity
+        score_summary = landed_df[['division', 'execution', 'difficulty', 'creativity']].describe()
 
-        # Add land_rate to the section summary
-        section_summary = section_summary.join(land_rate_sections, how='left')
+        # Step 4: Transpose the section_summary DataFrame
+        section_summary = section_summary.transpose()
 
-        # Calculate summary statistics for all landed scorecards combined
-        overall_summary = landed_df['score'].describe().to_frame().T
-        overall_summary.index = ['all_sections']
-
-        # Calculate land_rate for all sections combined
-        overall_landed_percentage = (df['landed'].sum() / len(df)) * 100
-        overall_summary['land_rate'] = overall_landed_percentage
-
-        # Concatenate overall summary with section summary
-        combined_summary = concat([section_summary, overall_summary])
-
-        return combined_summary
+        # Step 5: Return the two DataFrames as a list of dictionaries
+        return [{'section': section_summary.to_dict()}, {'score': score_summary.to_dict()}]
 
     def calculate_top_10(self, df):
-        # Filter out only landed scorecards
-        landed_df = df[df['landed'] == True]
+        # Step 1: Filter out only landed scorecards
+        landed_df = df[df['landed']]
 
-        # Get unique sections
-        sections = landed_df['section'].unique()
+        # Step 2: Calculate top 10 for each section
         top_10_stats_list = []
 
         # Calculate top 10 for each section
+        sections = ['kicker', 'rail', 'air trick']  # Assuming these are your sections, adjust as needed
         for section in sections:
             top_10 = landed_df[landed_df['section'] == section].nlargest(10, 'score')
-            section_stats = top_10['score'].describe().rename(section)
-            top_10_stats_list.append(section_stats)
+            top_10_stats_list.append(top_10)
 
-        # Calculate top 10 across all sections
-        top_10_overall = landed_df.nlargest(10, 'score')
-        overall_stats = top_10_overall['score'].describe().rename('all_sections')
-        top_10_stats_list.append(overall_stats)
+        # Step 3: Concatenate top 10 scorecards for all sections into a single DataFrame
+        top_10_df = concat(top_10_stats_list)
 
-        # Concatenate all statistics into a single DataFrame
-        top_10_stats = concat(top_10_stats_list, axis=1)
+        # Step 4: Group the top 10 scorecards by section and describe
+        section_summary = top_10_df.groupby('section')['score'].describe()
 
-        return top_10_stats.transpose()
+        # Step 5: Calculate summary statistics for division, execution, difficulty, and creativity
+        score_summary = top_10_df[['division', 'execution', 'difficulty', 'creativity']].describe()
+
+        # Step 6: Transpose the section_summary DataFrame
+        section_summary = section_summary.transpose()
+
+        # Step 7: Return the two DataFrames as a list of dictionaries
+        return [{'section': section_summary.to_dict()}, {'score': score_summary.to_dict()}]
 
     def calculate_cwa(self, df):
-        # Filter out scorecards with a score over 50
-        score_over_50_df = df[df['score'] > 50]
+        # Step 1: Filter out scorecards with a score over 50 and where landed is True
+        cwa_df = df[(df['score'] > 50) & df['landed']]
 
-        # Calculate total and landed counts for scorecards over 50
-        total_count_over_50 = score_over_50_df.groupby('section').size().rename('total_count_over_50')
-        landed_count_over_50 = score_over_50_df[score_over_50_df['landed']].groupby('section').size().rename(
-            'landed_count_over_50')
-        land_rate = (landed_count_over_50 / total_count_over_50).rename('land_rate').fillna(0) * 100
+        # Step 2: Calculate summary statistics for each section
+        section_summary = cwa_df.groupby('section')['score'].describe()
 
-        # Get unique sections
-        sections = score_over_50_df['section'].unique()
-        cwa_stats_list = []
+        # Step 3: Calculate summary statistics for division, execution, difficulty, and creativity
+        score_summary = cwa_df[['division', 'execution', 'difficulty', 'creativity']].describe()
 
-        # Calculate stats for each section
-        for section in sections:
-            section_stats = score_over_50_df[score_over_50_df['section'] == section]['score'].describe().rename(
-                section)
-            section_stats['land_rate'] = land_rate.get(section, 0)
-            cwa_stats_list.append(section_stats)
+        # Step 4: Transpose the section_summary DataFrame
+        section_summary = section_summary.transpose()
 
-        # Calculate stats across all sections
-        overall_stats = score_over_50_df['score'].describe().rename('all_sections')
-        overall_landed_percentage = (score_over_50_df['landed'].sum() / len(score_over_50_df)) * 100
-        overall_stats['land_rate'] = overall_landed_percentage
-        cwa_stats_list.append(overall_stats)
-
-        # Concatenate all statistics into a single DataFrame
-        cwa_stats = concat(cwa_stats_list, axis=1)
-
-        return cwa_stats.transpose()
+        # Step 5: Return the two DataFrames as a list of dictionaries
+        return [{'section': section_summary.to_dict()}, {'score': score_summary.to_dict()}]
 
     def calculate_attempted(self, df):
-        # Filter out only attempted (landed is False) scorecards
-        attempted_df = df[df['landed'] == False]
+        # Step 1: Filter out scorecards where landed is False
+        attempted_df = df[~df['landed']]
 
-        # Get unique sections
-        sections = attempted_df['section'].unique()
-        attempted_stats_list = []
+        # Step 2: Calculate summary statistics for each section
+        section_summary = attempted_df.groupby('section')['score'].describe()
 
-        # Calculate stats for each section
-        for section in sections:
-            section_stats = attempted_df[attempted_df['section'] == section]['score'].describe().rename(section)
-            attempted_stats_list.append(section_stats)
+        # Step 3: Calculate summary statistics for division, execution, difficulty, and creativity
+        score_summary = attempted_df[['division', 'execution', 'difficulty', 'creativity']].describe()
 
-        # Concatenate all statistics into a single DataFrame
-        attempted_stats = concat(attempted_stats_list, axis=1)
+        # Step 4: Transpose the section_summary DataFrame
+        section_summary = section_summary.transpose()
 
-        return attempted_stats.transpose()
+        # Step 5: Return the two DataFrames as a list of dictionaries
+        return [{'section': section_summary.to_dict()}, {'score': score_summary.to_dict()}]
+
+    def calculate_best_trick(self, df):
+        # Step 1: Filter out only landed scorecards
+        landed_df = df[df['landed']]
+
+        # Step 2: Get the single best scorecard for each section
+        best_trick_df = landed_df.loc[landed_df.groupby('section')['score'].idxmax()]
+
+        # Step 3: Calculate summary statistics for each section
+        section_summary = best_trick_df.groupby('section')['score'].describe()
+
+        # Step 4: Calculate summary statistics for division, execution, difficulty, and creativity
+        score_summary = best_trick_df[['division', 'execution', 'difficulty', 'creativity']].describe()
+
+        # Step 5: Transpose the section_summary DataFrame
+        section_summary = section_summary.transpose()
+
+        # Step 6: Return the two DataFrames as a list of dictionaries
+        return [{'section': section_summary.to_dict()}, {'score': score_summary.to_dict()}]
 
 
-class TeamRankings(db.Document):
+class TeamStats(db.Document):
     pass

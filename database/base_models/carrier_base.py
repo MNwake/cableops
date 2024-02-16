@@ -1,5 +1,6 @@
-from database.base_models import MyBaseModel
+from bson import ObjectId
+from pydantic import BaseModel, Field
 
 
-class CarrierBase(MyBaseModel):
-    pass
+class CarrierBase(BaseModel):
+    id: str = Field(default_factory=ObjectId, alias="_id")

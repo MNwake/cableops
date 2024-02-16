@@ -1,8 +1,10 @@
 import json
+from pprint import pprint
+from typing import Optional, List
 
 from fastapi import APIRouter, WebSocket
-from pydantic import BaseModel
 
+from database.base_models import RiderStatsBase
 from database.events import RiderStats
 from database.webserver.encoder import custom_encoder
 
@@ -13,6 +15,7 @@ class StatsRoute:
         self.router = APIRouter()
         self.manager = manager
         self.define_routes()
+        self.pydantic_stats = None
 
     def define_routes(self):
         @self.router.websocket("/ws/rider")
@@ -37,25 +40,24 @@ class StatsRoute:
             finally:
                 self.manager.disconnect(websocket, path)
 
+        @self.router.get("/riders")
+        async def get_stats(stat_id: Optional[str] = None, rider_id: Optional[str] = None, year: Optional[int] = None):
+            # Filter pydantic_stats based on query parameters
+            filtered_stats = self.filter_stats(stat_id, rider_id, year)
+            return filtered_stats
+
+    def filter_stats(self, stat_id: Optional[str], rider_id: Optional[str], year: Optional[int]) -> List[
+        'RiderStatsBase']:
+        # Apply filters to self.pydantic_stats
+        if not self.pydantic_stats:
+            print('no pydantic stats')
+            return []
+
+        return [stat for stat in self.pydantic_stats
+                if (not stat_id or stat.id == stat_id)
+                and (not rider_id or stat.rider == rider_id)
+                and (not year or stat.year == year)]
 
 
-    async def on_rider_stats_updated(self, stats):
-        try:
-            print('on rider stats updated')
-            print(type(stats))
 
-            # Convert ObjectId fields to strings
-            updated_stats_data = custom_encoder(stats)
-            updated_stats_data['_id'] = str(updated_stats_data['_id'])
-            updated_stats_data['rider'] = str(updated_stats_data['rider'])
 
-            print('updated stats', updated_stats_data)
-
-            # Convert the dictionary to JSON
-            message = json.dumps(updated_stats_data)
-
-            # Broadcast the updated rider stats
-            await self.manager.broadcast(message, '/ws/stats/rider')
-
-        except Exception as e:
-            print('Error in on_rider_stats_updated:', e)

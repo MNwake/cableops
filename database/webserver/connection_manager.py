@@ -2,6 +2,7 @@ from typing import List, Dict
 
 from starlette.websockets import WebSocket
 
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, List[WebSocket]] = {}
@@ -38,4 +39,3 @@ class ConnectionManager:
         if path in self.active_connections:
             for connection in self.active_connections[path]:
                 await connection.send_text(data)
-

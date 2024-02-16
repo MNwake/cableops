@@ -226,14 +226,16 @@
 
                             MDDivider:
 
-                            MDButton:
+                            MDBoxLayout:
                                 adaptive_height: True
-                                id: carrier_button
-                                on_release: root.controller.simulate_carrier()
-                                MDButtonText:
-                                    text: 'Similate Carrier Pass'
 
-                            MDButton:
-                                on_release: root.update_db()
-                                MDButtonText:
-                                    text: 'utility button'
+                                MDButton:
+                                    id: carrier_button
+                                    on_release: root.controller.simulate_carrier()
+                                    MDButtonText:
+                                        text: 'Similate Carrier Pass'
+
+                                MDButton:
+                                    on_release: root.update_db()
+                                    MDButtonText:
+                                        text: 'utility button'

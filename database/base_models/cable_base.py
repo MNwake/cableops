@@ -1,9 +1,11 @@
 from typing import Optional, List
 
-from database.base_models import MyBaseModel
+from bson import ObjectId
+from pydantic import BaseModel, Field
 
 
-class CableBase(MyBaseModel):
+class CableBase(BaseModel):
+    id: str = Field(default_factory=ObjectId, alias="_id")
     park: Optional[str]  # Assuming this will be the ObjectId of the Park as a string
     name: str
     _speed: float = 0

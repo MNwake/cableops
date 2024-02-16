@@ -7,4 +7,4 @@ from .scorecard import Scorecard
 from .judge import Judge
 from .live_contest import LiveContest
 from .stats import RiderStats
-from .stats import TeamRankings
+from .stats import TeamStats

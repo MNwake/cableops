@@ -16,7 +16,12 @@ class Scorecard(db.Document):
     rider = db.ReferenceField("User")
     judge = db.ReferenceField("Judge")
 
+    @classmethod
+    def get_scorecards_by_rider(cls, rider):
+        return cls.objects.filter(rider=rider).order_by('-date').limit(20)
 
-
+    @classmethod
+    def get_most_recent_cards(cls, amount: int = 20):
+        return cls.objects.order_by('-date').limit(amount)
 
 

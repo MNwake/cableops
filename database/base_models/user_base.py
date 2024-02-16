@@ -1,12 +1,12 @@
 from datetime import datetime, date
 from typing import Optional
 
-from pydantic import Field
+from bson import ObjectId
+from pydantic import Field, BaseModel
 
-from database.base_models import MyBaseModel
 
-
-class UserBase(MyBaseModel):
+class UserBase(BaseModel):
+    id: str = Field(default_factory=ObjectId, alias="_id")
     email: Optional[str] = None
     first_name: str
     last_name: str

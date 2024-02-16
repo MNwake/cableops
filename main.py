@@ -11,24 +11,21 @@ https://github.com/HeaTTheatR/LoginAppMVC
 https://en.wikipedia.org/wiki/Model–view–controller
 """
 import sys
-import threading
 
-from kivy.clock import Clock
-
-from database import FastAPIApp, DataBase
 from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
+
 from View.screens import screens
+from database import FastAPIApp, DataBase
 
 if 'linux' in sys.platform:
-    import RPi.GPIO as gpio
     Window.size = (1000, 900)
 
 import subprocess
 
 import firebase_admin
-from firebase_admin import credentials, storage
+from firebase_admin import credentials
 
 if sys.platform == 'linux':
     cred = credentials.Certificate('/home/theokoester/dev/cableops/server/database/the-cwa-4df1775855c1.json')
@@ -60,15 +57,7 @@ def sync_files():
         print(e.stderr.decode())
 
 
-fastapi_app = FastAPIApp()
-
-def start_fastapi_server():
-    fastapi_thread = threading.Thread(target=fastapi_app.run)
-    fastapi_thread.start()
-
 # Start the FastAPI server
-if 'linux' in sys.platform:
-    start_fastapi_server()
 
 class CableOps(MDApp):
     def __init__(self, **kwargs):
@@ -76,14 +65,15 @@ class CableOps(MDApp):
         self.load_all_kv_files(self.directory)
         self.connection = DataBase()
         self.manager_screens = MDScreenManager()
-        self.fastapi = fastapi_app
-
+        self.fastapi = FastAPIApp(self.connection)
+        self.fastapi.start_fastapi_server()
 
     def build(self) -> MDScreenManager:
         self.theme_cls.primary_palette = 'Aliceblue'
         self.theme_cls.theme_style = 'Dark'
         self.theme_cls.dynamic_color = True
         self.generate_application_screens()
+
         return self.manager_screens
 
     def generate_application_screens(self) -> None:
@@ -104,11 +94,6 @@ class CableOps(MDApp):
             view.name = name_screen
             self.manager_screens.add_widget(view)
 
-    def on_stop(self):
-        # if 'linux' in sys.platform:
-        #     print('gpio cleanup')x
-        #     gpio.cleanup()
-        pass
 
     def switch_theme_style(self):
         self.theme_cls.primary_palette = (
@@ -118,13 +103,10 @@ class CableOps(MDApp):
             "Dark" if self.theme_cls.theme_style == "Light" else "Light"
         )
 
+
 if __name__ == '__main__':
-    # Sync files from Mac to Raspberry Pi
     if 'darwin' in sys.platform:
         sync_files()
-
-    if 'linux' in sys.platform:
-        start_fastapi_server()
 
     # Run Kivy application
     CableOps().run()
