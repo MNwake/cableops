@@ -36,7 +36,8 @@ class RiderRoutes:
                     pass
 
         @self.router.get("")
-        def get_riders(home_park_id: Optional[str] = None,
+        def get_riders(cursor: Optional[str] = None,
+                       home_park_id: Optional[str] = None,
                        min_age: Optional[int] = None,
                        max_age: Optional[int] = None,
                        gender: Optional[str] = Query(None, enum=['male', 'female']),
@@ -47,12 +48,20 @@ class RiderRoutes:
                        name: Optional[str] = Query(None,
                                                    description="Search by first or last name"),
                        sort_by: Optional[SortRiders] = None) -> List[RiderBase]:
+
             # Filter riders based on query parameters
             filtered_riders = self.filter_riders(home_park_id, min_age, max_age, gender, stance,
                                                  year_started, rider_id, name)
 
             # Sort filtered riders
             sorted_riders = self.sort_riders(filtered_riders, sort_by)
+            # Apply cursor pagination
+            if cursor:
+                try:
+                    cursor_index = next(i for i, rider in enumerate(sorted_riders) if str(rider.id) == cursor)
+                    sorted_riders = sorted_riders[cursor_index:]
+                except StopIteration:
+                    sorted_riders = []
 
             return sorted_riders
 
