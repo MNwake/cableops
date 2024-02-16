@@ -1,12 +1,11 @@
 import json
 from typing import Optional, List
 
-from fastapi import WebSocket, APIRouter
+from fastapi import WebSocket, APIRouter, Query
 from starlette.websockets import WebSocketDisconnect
 
 from database.base_models import RiderBase
-from database.utils import calculate_age
-
+from database.utils import calculate_age, Stance, Gender, SortRiders
 
 
 class RiderRoutes:
@@ -37,33 +36,71 @@ class RiderRoutes:
                     pass
 
         @self.router.get("")
-        async def get_riders(home_park_id: Optional[str] = None, min_age: Optional[int] = None,
-                             max_age: Optional[int] = None, gender: Optional[str] = None,
-                             stance: Optional[str] = None, year_started: Optional[int] = None,
-                             rider_id: Optional[str] = None, name: Optional[str] = None):
-            # Filter pydantic_riders based on query parameters
+        def get_riders(home_park_id: Optional[str] = None,
+                       min_age: Optional[int] = None,
+                       max_age: Optional[int] = None,
+                       gender: Optional[str] = Query(None, enum=['male', 'female']),
+                       stance: Optional[str] = Query(None, enum=['regular', 'goofy']),
+                       year_started: Optional[str] = None,
+                       rider_id: Optional[str] = Query(None,
+                                                       description="Comma-separated rider IDs"),
+                       name: Optional[str] = Query(None,
+                                                   description="Search by first or last name"),
+                       sort_by: Optional[SortRiders] = None) -> List[RiderBase]:
+            # Filter riders based on query parameters
             filtered_riders = self.filter_riders(home_park_id, min_age, max_age, gender, stance,
                                                  year_started, rider_id, name)
-            return filtered_riders
+
+            # Sort filtered riders
+            sorted_riders = self.sort_riders(filtered_riders, sort_by)
+
+            return sorted_riders
 
     def filter_riders(self, home_park_id: Optional[str], min_age: Optional[int],
                       max_age: Optional[int], gender: Optional[str],
-                      stance: Optional[str], year_started: Optional[int],
+                      stance: Optional[str], year_started: Optional[str],
                       rider_id: Optional[str], name: Optional[str]) -> List[RiderBase]:
         # Apply filters to self.pydantic_riders
         if not self.pydantic_riders:
             return []
 
-        return [rider for rider in self.pydantic_riders
-                if (not home_park_id or rider.home_park == home_park_id)
-                and (not rider_id or rider.id == rider_id)
-                and (not min_age or calculate_age(rider.date_of_birth) >= min_age)
-                and (not max_age or calculate_age(rider.date_of_birth) <= max_age)
-                and (not gender or rider.gender == gender.lower())
-                and (not stance or rider.stance == stance.lower())
-                and (not year_started or rider.year_started == year_started)
-                and (not name or name.lower() in rider.first_name.lower()
-                     or name.lower() in rider.last_name.lower())]
+        filtered_riders = self.pydantic_riders
+
+        # Apply filters
+        if home_park_id:
+            filtered_riders = [rider for rider in filtered_riders if rider.home_park == home_park_id]
+        if rider_id:
+            filtered_riders = [rider for rider in filtered_riders if rider.id == rider_id]
+        if min_age:
+            filtered_riders = [rider for rider in filtered_riders if calculate_age(rider.date_of_birth) >= min_age]
+        if max_age:
+            filtered_riders = [rider for rider in filtered_riders if calculate_age(rider.date_of_birth) <= max_age]
+        if gender:
+            filtered_riders = [rider for rider in filtered_riders if rider.gender == gender]
+        if stance:
+            filtered_riders = [rider for rider in filtered_riders if rider.stance == stance]
+        if year_started:
+            filtered_riders = [rider for rider in filtered_riders if rider.year_started == year_started]
+        if name:
+            filtered_riders = [rider for rider in filtered_riders if
+                               name.lower() in rider.first_name.lower() or name.lower() in rider.last_name.lower()]
+
+        return filtered_riders
+
+    def sort_riders(self, riders: List[RiderBase], sort_by: Optional[SortRiders]) -> List[RiderBase]:
+        if not sort_by:
+            return riders
+
+        if sort_by == SortRiders.oldest_to_youngest:
+            return sorted(riders, key=lambda x: x.date_of_birth)
+        elif sort_by == SortRiders.youngest_to_oldest:
+            return sorted(riders, key=lambda x: x.date_of_birth, reverse=True)
+        elif sort_by == SortRiders.alphabetical:
+            return sorted(riders, key=lambda x: (x.first_name, x.last_name))
+        elif sort_by == SortRiders.most_years_experience:
+            return sorted(riders, key=lambda x: x.year_started, reverse=True)
+
+        return riders
 
 
     async def handle_request(self, websocket: WebSocket, request_type: str, message_data: dict):
@@ -103,6 +140,3 @@ class RiderRoutes:
             await self.manager.broadcast_new_riders([rider.dict() for rider in new_riders])
         else:
             await websocket.send_json({"error": "Invalid request format for create_rider"})
-
-
-

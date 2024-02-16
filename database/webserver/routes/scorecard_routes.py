@@ -92,6 +92,7 @@ class ScorecardRoutes:
                                  ):
             # Filter scorecards based on query parameters
             print(self.pydantic_scorecards)
+            limit = 10
 
             filtered_scorecards = self.filter_scorecards(rider_id, date, section,
                                                          landed, park_id)

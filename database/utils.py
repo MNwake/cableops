@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from bson import ObjectId
@@ -80,3 +81,27 @@ def calculate_birth_date(age: int) -> datetime:
 
 def to_str(obj_id):
     return str(obj_id) if obj_id else None
+
+class Gender(Enum):
+    male = "male"
+    female = "female"
+
+class Stance(Enum):
+    regular = "regular"
+    goofy = "goofy"
+
+class Section(str, Enum):
+    kicker = "Kicker"
+    rail = "Rail"
+    air_trick = "Air Trick"
+
+class SortRiders(str, Enum):
+    oldest_to_youngest = "oldest_to_youngest"
+    youngest_to_oldest = "youngest_to_oldest"
+    alphabetical = "alphabetical"
+    most_years_experience = "most_years_experience"
+
+class SortScorecards(str, Enum):
+    most_recent = "Most Recent"
+    score_highest = "Score:Highest"
+    score_lowest = "Score: Lowest"
