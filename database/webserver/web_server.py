@@ -1,10 +1,12 @@
 import asyncio
+import os
 import threading
 import time
 
 import uvicorn
 from bson import ObjectId
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, FileResponse
 
 from database.base_models import RiderStatsBase, ParkBase
 from database.base_models.scorecard_base import ScorecardBase
@@ -15,6 +17,9 @@ from database.utils import custom_json_encoder
 from .connection_manager import ConnectionManager
 from .routes import StatsRoute, ScorecardRoutes, RiderRoutes
 from .routes.parks_route import ParksRoute
+
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+HTML_FILE = os.path.join(BASE_DIR, 'website/index.html')
 
 
 class FastAPIApp:
@@ -52,7 +57,7 @@ class FastAPIApp:
 
         @self.app.get("/")
         async def read_root():
-            return {"Hello": "World"}
+            return FileResponse(HTML_FILE)
 
         @self.app.get("/ping")
         async def ping():
@@ -60,15 +65,9 @@ class FastAPIApp:
 
 
     def run(self):
-        uvicorn.run(self.app, host="0.0.0.0", port=8000)
+        uvicorn.run(self.app, host="0.0.0.0", port=8080)
 
     async def convert_data(self):
-        routes = [
-            self.riders_route,
-            # self.stats_route,
-            # self.scorecard_route,
-            # self.parks_route
-        ]
         start_time = time.time()
 
         all_riders_time = time.time()
@@ -79,19 +78,20 @@ class FastAPIApp:
         all_stats = RiderStats.objects().all()
         print(f"Time taken to fetch all stats: {time.time() - all_stats_time:.2f} seconds")
 
-        recent_scorecards_time = time.time()
-        recent_scorecards = Scorecard.get_most_recent_cards()
-        print(f"Time taken to fetch recent scorecards: {time.time() - recent_scorecards_time:.2f} seconds")
-
         all_parks_time = time.time()
         all_parks = Park.objects().all()
         print(f"Time taken to fetch all parks: {time.time() - all_parks_time:.2f} seconds")
 
+        recent_scorecards_time = time.time()
+        recent_scorecards = Scorecard.objects().order_by('-date').limit(100)
+
+
+        print(f"Time taken to fetch 100 most recent scorecards: {time.time() - recent_scorecards_time:.2f} seconds")
+
         print(f"Total time taken: {time.time() - start_time:.2f} seconds")
 
 
-        all_parks = Park.objects().all()
-
+        conversion_time = time.time
         # Now pass the awaited statistics to the mongo_to_pydantic method
         print('starting parks conversion')
         self.parks_route.pydantic_parks = ParkBase.mongo_to_pydantic(all_parks)
@@ -105,5 +105,6 @@ class FastAPIApp:
         end_time = time.time()
         execution_time = end_time - start_time
         self.initialized = True
-        print(f"Pydantic Conversion time: {execution_time} seconds")
+        print(f"Pydantic Conversion time: {conversion_time} seconds")
+        print(f"execution time: {execution_time} seconds")
 

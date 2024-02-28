@@ -1,13 +1,13 @@
 import json
 from pprint import pprint
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, HTTPException
+from starlette.websockets import WebSocketDisconnect
 
 from database.base_models import RiderStatsBase
 from database.events import RiderStats
 from database.webserver.encoder import custom_encoder
-
 
 
 class StatsRoute:
@@ -22,42 +22,45 @@ class StatsRoute:
         async def get_rider_stats(websocket: WebSocket):
             path = '/ws/stats/rider'
             await self.manager.connect(websocket, path)
-            try:
-                while True:
-                    # Wait for a message containing the rider_id
-                    data = await websocket.receive_text()
-                    rider_id = json.loads(data).get('rider_id')
-
-                    # Fetch stats for the requested rider
-                    if rider_id:
-                        rider_stats = await RiderStats.get_rider_stats(rider_id=rider_id)
-                        await websocket.send_json(rider_stats)
-                    else:
-                        # Handle invalid rider_id
-                        await websocket.send_text("Invalid rider ID")
-            except Exception as e:
-                print('Exception in rider stats WebSocket:', e)
-            finally:
-                self.manager.disconnect(websocket, path)
+            while True:
+                try:
+                    message = await websocket.receive_text()
+                    if message:
+                        message_data = json.loads(message)
+                        request_type = message_data.get("request_type")
+                        if request_type:
+                            await self.handle_request(websocket, request_type, message_data)
+                        else:
+                            await websocket.send_json({"error": "Invalid request format"})
+                except WebSocketDisconnect as e:
+                    print('websocketdisconnect', e)
+                finally:
+                    pass
 
         @self.router.get("/riders")
-        async def get_stats(stat_id: Optional[str] = None, rider_id: Optional[str] = None, year: Optional[int] = None):
-            # Filter pydantic_stats based on query parameters
-            filtered_stats = self.filter_stats(stat_id, rider_id, year)
-            return filtered_stats
+        async def get_stats(cursor: Optional[str] = None,
+                            stat_id: Optional[str] = None,
+                            rider_id: Optional[str] = None,
+                            year: Optional[int] = None,
+                            batch_size: Optional[int] = 20) -> Tuple[List[RiderStatsBase], str | None]:
+            try:
+                # Retrieve matching rider stats based on query parameters
+                stats = RiderStats.get_rider_stats(stat_id=stat_id, rider_id=rider_id, year=year, cursor=cursor,
+                                                   limit=batch_size)
 
-    def filter_stats(self, stat_id: Optional[str], rider_id: Optional[str], year: Optional[int]) -> List[
-        'RiderStatsBase']:
-        # Apply filters to self.pydantic_stats
-        if not self.pydantic_stats:
-            print('no pydantic stats')
-            return []
+                # Extract the IDs and convert them to strings
+                stat_ids = [str(stat.id) for stat in stats]
 
-        return [stat for stat in self.pydantic_stats
-                if (not stat_id or stat.id == stat_id)
-                and (not rider_id or stat.rider == rider_id)
-                and (not year or stat.year == year)]
+                # Match Pydantic stats with the retrieved IDs
+                matched_stats = [stat for stat in self.pydantic_stats if str(stat.id) in stat_ids]
 
+                # Determine the next cursor
+                next_cursor = str(matched_stats[-1].id) if matched_stats else None
 
+                return matched_stats, next_cursor
 
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
 
+    def handle_request(self, websocket, request_type, message_data):
+        pass

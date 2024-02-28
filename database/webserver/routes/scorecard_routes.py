@@ -1,9 +1,8 @@
 import json
 from datetime import datetime
-from pprint import pprint
 from typing import Optional, List
 
-from fastapi import APIRouter, Body, HTTPException, Query, Depends
+from fastapi import APIRouter, Body, HTTPException, Query
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from database import Rider, Scorecard, Park
@@ -17,7 +16,7 @@ class ScorecardRoutes:
         self.router = APIRouter()
         self.manager = manager
         self.define_routes()
-        self.pydantic_scorecards = None
+        self.pydantic_scorecards = []
 
     def define_routes(self):
 
@@ -76,100 +75,68 @@ class ScorecardRoutes:
                 raise HTTPException(status_code=400, detail=str(e))
 
         @self.router.get("")
-        async def get_scorecards(sort_by: Optional[str] = Query(None, description="Sort by attribute",
-                                                                enum=["Most Recent", "Score:Highest", "Score: Lowest"]),
-                                 cursor: Optional[str] = Query(None, description="Cursor"),
-                                 rider_id: Optional[List[str]] = Query(None,
-                                                                       description="Rider IDs separated by comma"),
-                                 date: Optional[datetime] = Query(None, description="Date (mm/dd/yyyy)"),
-                                 section: Optional[str] = Query(None, description="Section",
-                                                                enum=["Kicker", "Rail", "Air Trick"]),
-                                 landed: Optional[bool] = Query(None, description="Landed", enum=[True, False]),
-                                 park_id: Optional[List[str]] = Query(None,
-                                                                      description="Park IDs separated by comma"),
-                                 range_start: Optional[int] = None,
-                                 range_end: Optional[int] = None,
-                                 ):
-            # Filter scorecards based on query parameters
-            print(self.pydantic_scorecards)
-            limit = 10
-
-            filtered_scorecards = self.filter_scorecards(rider_id, date, section,
-                                                         landed, park_id)
-
-            # Sort scorecards based on query parameters
-            sorted_scorecards = self.sort_scorecards(filtered_scorecards, sort_by)
-
-            # Apply cursor pagination
-            if cursor:
-                # Find the index of the cursor in the sorted list
-                try:
-                    cursor_index = next(i for i, scorecard in enumerate(sorted_scorecards)
-                                        if str(scorecard.id) == cursor)
-                    sorted_scorecards = sorted_scorecards[cursor_index:]
-                except StopIteration:
-                    return []
-
-            # Apply range pagination
-            paginated_scorecards = sorted_scorecards[range_start:range_end]
-
-            return paginated_scorecards
-
-    def filter_scorecards(self,
-                          rider_id: Optional[List[str]], date: Optional[str],
-                          section: Optional[str], landed: Optional[bool],
-                          park_id: Optional[List[str]]):
-        # Apply filters to self.pydantic_scorecards
-        if not self.pydantic_scorecards:
-            return []
-
-        filtered_scorecards = self.pydantic_scorecards
-
-        # Apply remaining filters
-        if rider_id:
-            filtered_scorecards = [scorecard for scorecard in filtered_scorecards
-                                   if scorecard.rider_id in rider_id]
-        if date:
+        async def get_scorecards(cursor: Optional[str] = Query(None, description="Cursor for pagination"),
+                                 batch_size: Optional[int] = Query(10, description="Number of scorecards per batch"),
+                                 sort_by: Optional[str] = Query('Most Recent', description="Sort by attribute",
+                                                                enum=["Most Recent", "Score: Highest",
+                                                                      "Score: Lowest"])):
             try:
-                # Convert the date string to a datetime object
-                date_obj = datetime.strptime(date, "%m/%d/%Y")
-                # Filter scorecards by date
-                filtered_scorecards = [scorecard for scorecard in filtered_scorecards
-                                       if scorecard.date == date_obj]
-            except ValueError:
-                # Handle invalid date format
-                pass
-        if section:
-            filtered_scorecards = [scorecard for scorecard in filtered_scorecards
-                                   if scorecard.section == section.lower()]
-        if landed is not None:
-            filtered_scorecards = [scorecard for scorecard in filtered_scorecards
-                                   if scorecard.landed == landed]
-        if park_id:
-            filtered_scorecards = [scorecard for scorecard in filtered_scorecards
-                                   if scorecard.park_id in park_id]
+                scorecards_query = Scorecard.get_scorecards(sort_by=sort_by, cursor=cursor)
+                scorecards = scorecards_query.limit(batch_size)
 
-        return filtered_scorecards
+                # Process scorecards and determine next cursor
+                processed_scorecards, next_cursor = self.process_scorecards(scorecards)
 
-    def sort_scorecards(self, scorecards, sort_by: Optional[str]):
-        # Apply sorting
-        if sort_by:
-            if sort_by == "Most Recent":
-                scorecards = sorted(scorecards,
-                                    key=lambda x: x.date or datetime.min, reverse=True)
-            elif sort_by == "Score:Highest":
-                scorecards = sorted(scorecards,
-                                    key=lambda x: x.score or 0, reverse=True)
-            elif sort_by == "Score: Lowest":
-                scorecards = sorted(scorecards,
-                                    key=lambda x: x.score or 0)
+                return processed_scorecards, next_cursor
+
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+        @self.router.get("/rider/{rider_id}")
+        async def get_rider_scorecards(rider_id: str,
+                                       cursor: Optional[str] = Query(None, description="Cursor for pagination"),
+                                       batch_size: Optional[int] = Query(10,
+                                                                         description="Number of scorecards per batch"),
+                                       sort_by: Optional[str] = Query('Most Recent', description="Sort by attribute",
+                                                                      enum=["Most Recent", "Score: Highest",
+                                                                            "Score: Lowest"])):
+            try:
+                scorecards_query = Scorecard.get_scorecards(rider_id=rider_id, sort_by=sort_by, cursor=cursor)
+                scorecards = scorecards_query.limit(batch_size)
+
+                # Process scorecards and determine next cursor
+                processed_scorecards, next_cursor = self.process_scorecards(scorecards)
+
+                return processed_scorecards, next_cursor
+
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
+
+    def process_scorecards(self, scorecards):
+        final_scorecards = []
+        next_cursor = None
+
+        for scorecard in scorecards:
+            scorecard_id = str(scorecard.id)
+            cached_model = self.find_in_cache(scorecard_id)
+
+            if cached_model:
+                pydantic_model = cached_model
             else:
-                print(f"Invalid sort_by attribute: {sort_by}. Sorting skipped.")
+                pydantic_model = ScorecardBase.mongo_to_pydantic([scorecard])[0]
+                self.pydantic_scorecards.append(pydantic_model)
 
-        return scorecards
+            final_scorecards.append(pydantic_model)
 
-    def max_scorecards_limit(self, cursor: Optional[bool] = Query(None)):
-        if cursor:
-            return Query(20, description="Max number of scorecards to get", le=100)
-        else:
-            return None
+        if final_scorecards:
+            # Set next_cursor as the ISO format string of the date of the last scorecard
+            next_cursor = final_scorecards[-1].date.isoformat()
+
+        return final_scorecards, next_cursor
+
+    def find_in_cache(self, scorecard_id):
+        for scorecard in self.pydantic_scorecards:
+            if scorecard.id == scorecard_id:
+                return scorecard
+        return None
+

@@ -96,7 +96,6 @@ class CableMainScreen(BaseScreenView):
 
     def clear_search(self, instance, text):
         print('clear_search')
-        print(self.rider_on_deck)
         instance.rider_on_deck = ''
         instance.text = instance.rider_on_deck
 

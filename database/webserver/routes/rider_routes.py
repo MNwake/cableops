@@ -1,11 +1,11 @@
 import json
-from typing import Optional, List
+from typing import Optional, Dict, Any, List
 
-from fastapi import WebSocket, APIRouter, Query
+from fastapi import WebSocket, APIRouter, Query, HTTPException
 from starlette.websockets import WebSocketDisconnect
 
+from database import Rider
 from database.base_models import RiderBase
-from database.utils import calculate_age, Stance, Gender, SortRiders
 
 
 class RiderRoutes:
@@ -36,81 +36,41 @@ class RiderRoutes:
                     pass
 
         @self.router.get("")
-        def get_riders(cursor: Optional[str] = None,
-                       home_park_id: Optional[str] = None,
-                       min_age: Optional[int] = None,
-                       max_age: Optional[int] = None,
-                       gender: Optional[str] = Query(None, enum=['male', 'female']),
-                       stance: Optional[str] = Query(None, enum=['regular', 'goofy']),
-                       year_started: Optional[str] = None,
-                       rider_id: Optional[str] = Query(None,
-                                                       description="Comma-separated rider IDs"),
-                       name: Optional[str] = Query(None,
-                                                   description="Search by first or last name"),
-                       sort_by: Optional[SortRiders] = None) -> List[RiderBase]:
+        async def get_riders(cursor: Optional[str] = None,
+                             home_park_id: Optional[str] = None,
+                             min_age: Optional[int] = None,
+                             max_age: Optional[int] = None,
+                             gender: Optional[str] = Query(None, enum=['male', 'female']),
+                             stance: Optional[str] = Query(None, enum=['regular', 'goofy']),
+                             year_started: Optional[str] = None,
+                             rider_id: Optional[str] = Query(None, description="Comma-separated rider IDs"),
+                             name: Optional[str] = Query(None, description="Search by first or last name"),
+                             ) -> str | dict[str, list[Any] | str | None]:
+            try:
+                if not self.pydantic_riders:
+                    return 'database not loaded'
 
-            # Filter riders based on query parameters
-            filtered_riders = self.filter_riders(home_park_id, min_age, max_age, gender, stance,
-                                                 year_started, rider_id, name)
+                # Retrieve matching rider IDs based on query parameters
+                riders = Rider.get_riders(home_park_id=home_park_id, min_age=min_age, max_age=max_age,
+                                          gender=gender, stance=stance, year_started=year_started,
+                                          rider_id=rider_id, name=name, cursor=cursor)
+                print('rider id', riders[0].id)
+                # Extract the IDs and convert them to strings
+                rider_ids = [str(rider.id) for rider in riders]
 
-            # Sort filtered riders
-            sorted_riders = self.sort_riders(filtered_riders, sort_by)
-            # Apply cursor pagination
-            if cursor:
-                try:
-                    cursor_index = next(i for i, rider in enumerate(sorted_riders) if str(rider.id) == cursor)
-                    sorted_riders = sorted_riders[cursor_index:]
-                except StopIteration:
-                    sorted_riders = []
+                # Match Pydantic riders with the retrieved IDs
+                matched_riders = [rider for rider in self.pydantic_riders if str(rider.id) in rider_ids]
 
-            return sorted_riders
+                print(f"Sending batch of {len(matched_riders)} matched riders")
 
-    def filter_riders(self, home_park_id: Optional[str], min_age: Optional[int],
-                      max_age: Optional[int], gender: Optional[str],
-                      stance: Optional[str], year_started: Optional[str],
-                      rider_id: Optional[str], name: Optional[str]) -> List[RiderBase]:
-        # Apply filters to self.pydantic_riders
-        if not self.pydantic_riders:
-            return []
+                # Determine the next cursor
+                next_cursor = str(matched_riders[-1].id) if matched_riders else None
 
-        filtered_riders = self.pydantic_riders
+                # Return a dictionary with data and cursor
+                return {"data": matched_riders, "cursor": next_cursor}
 
-        # Apply filters
-        if home_park_id:
-            filtered_riders = [rider for rider in filtered_riders if rider.home_park == home_park_id]
-        if rider_id:
-            filtered_riders = [rider for rider in filtered_riders if rider.id == rider_id]
-        if min_age:
-            filtered_riders = [rider for rider in filtered_riders if calculate_age(rider.date_of_birth) >= min_age]
-        if max_age:
-            filtered_riders = [rider for rider in filtered_riders if calculate_age(rider.date_of_birth) <= max_age]
-        if gender:
-            filtered_riders = [rider for rider in filtered_riders if rider.gender == gender]
-        if stance:
-            filtered_riders = [rider for rider in filtered_riders if rider.stance == stance]
-        if year_started:
-            filtered_riders = [rider for rider in filtered_riders if rider.year_started == year_started]
-        if name:
-            filtered_riders = [rider for rider in filtered_riders if
-                               name.lower() in rider.first_name.lower() or name.lower() in rider.last_name.lower()]
-
-        return filtered_riders
-
-    def sort_riders(self, riders: List[RiderBase], sort_by: Optional[SortRiders]) -> List[RiderBase]:
-        if not sort_by:
-            return riders
-
-        if sort_by == SortRiders.oldest_to_youngest:
-            return sorted(riders, key=lambda x: x.date_of_birth)
-        elif sort_by == SortRiders.youngest_to_oldest:
-            return sorted(riders, key=lambda x: x.date_of_birth, reverse=True)
-        elif sort_by == SortRiders.alphabetical:
-            return sorted(riders, key=lambda x: (x.first_name, x.last_name))
-        elif sort_by == SortRiders.most_years_experience:
-            return sorted(riders, key=lambda x: x.year_started, reverse=True)
-
-        return riders
-
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
 
     async def handle_request(self, websocket: WebSocket, request_type: str, message_data: dict):
         handlers = {

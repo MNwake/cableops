@@ -5,22 +5,22 @@ from bson import ObjectId
 from pydantic import Field, BaseModel, parse_obj_as
 
 from database import Rider
-from database.events import RiderStats
 
 
 class RiderBase(BaseModel):
-    id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: str = Field(default_factory=lambda: str(ObjectId()))
     email: Optional[str] = None
     first_name: str
     last_name: str
     date_of_birth: Optional[datetime] = None
     gender: Optional[str] = None
-    date_created: datetime = Field(default_factory=datetime.utcnow)
+    date_created: datetime = Field(default_factory=lambda: datetime.utcnow().replace(second=0))
     profile_image: str = ''
     stance: Optional[str] = None
     year_started: Optional[int] = None
-    home_park: Optional[str] = None
-    statistics: Optional[str] = None
+    division: Optional[float] = None
+    home_park: Optional[str] = Field(default_factory=lambda: str(ObjectId()))
+    statistics: Optional[str] = Field(default_factory=lambda: str(ObjectId()))
 
     @classmethod
     def mongo_to_pydantic(cls, riders):
@@ -32,27 +32,28 @@ class RiderBase(BaseModel):
         :return: Converted Pydantic RiderBase model(s) with statistics.
         """
         # Convert MongoDB Rider objects to dictionaries
-        rider_dicts = [
-            {
+        rider_dicts = []
+        count = 1
+        for rider in riders:
+            rider_dict = {
                 'id': str(rider.id),
                 'email': rider.email,
                 'first_name': rider.first_name,
                 'last_name': rider.last_name,
-                'date_of_birth': rider.date_of_birth,
+                'date_of_birth': rider.date_of_birth.strftime("%Y-%m-%d %H:%M:%S"),  # Format date_of_birth
                 'gender': rider.gender,
-                'date_created': rider.date_created,
+                'date_created': rider.date_created.strftime("%Y-%m-%d %H:%M:%S"),  # Format date_created
                 'profile_image': rider.profile_image,
                 'stance': rider.stance,
                 'year_started': rider.year_started,
                 'home_park': str(rider.home_park.id) if rider.home_park else None,
                 'statistics': str(rider.statistics.id) if rider.statistics else None
             }
-            for rider in riders
-        ]
+            rider_dicts.append(rider_dict)
+            count += 1
 
         # Parse the list of dictionaries into a list of Pydantic models
         converted_riders = parse_obj_as(List[cls], rider_dicts)
-
         return converted_riders
 
     async def fetch_rider_by_id(self, rider_id: str):

@@ -28,14 +28,7 @@ class TheCWA(db.Document):
             return 0
         return sum(lst) / len(lst)
 
-    @staticmethod
-    def calculate_division(score):
-        for score_range, label in TheCWA.div_labels.items():
-            if isinstance(score_range, tuple):
-                if score_range[0] <= score < score_range[1]:
-                    return label
-            elif score == score_range:
-                return label
+
 
     @property
     def num_riders(self):

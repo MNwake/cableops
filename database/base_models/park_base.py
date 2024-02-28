@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 
 class ParkBase(BaseModel):
-    id: str
+    id: str = Field(default_factory=lambda: str(ObjectId()))
     name: str
     state: Optional[str] = None
     abbreviation: Optional[str] = None

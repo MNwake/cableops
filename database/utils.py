@@ -5,6 +5,7 @@ from typing import Optional
 from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 
+
 bib_colors = ['red', 'blue', 'green', 'yellow']
 color_dict = {
     "red": [1, 0, 0, 0.2],
@@ -16,6 +17,22 @@ color_dict = {
     "white": [1, 1, 1, 0.2],
 }
 
+div_labels = {
+        (-1, 20): 'Beginner',
+        (20, 40): 'Novice',
+        (40, 60): 'Intermediate',
+        (60, 80): 'Advanced',
+        (80, 101): 'Pro'
+    }
+
+
+def calculate_division(score):
+    for score_range, label in div_labels.items():
+        if isinstance(score_range, tuple):
+            if score_range[0] <= score < score_range[1]:
+                return label
+        elif score == score_range:
+            return label
 
 def build_rider_query(home_park: Optional[str] = None,
                       min_age: Optional[int] = 0,
@@ -91,9 +108,9 @@ class Stance(Enum):
     goofy = "goofy"
 
 class Section(str, Enum):
-    kicker = "Kicker"
-    rail = "Rail"
-    air_trick = "Air Trick"
+    kicker = "kicker"
+    rail = "rail"
+    air_trick = "air trick"
 
 class SortRiders(str, Enum):
     oldest_to_youngest = "oldest_to_youngest"

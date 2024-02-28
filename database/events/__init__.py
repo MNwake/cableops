@@ -2,9 +2,9 @@ from .user import User
 from .park import Park
 from .admin import Admin
 from .contest import Contest
-from .rider import Rider
 from .scorecard import Scorecard
 from .judge import Judge
 from .live_contest import LiveContest
 from .stats import RiderStats
+from .rider import Rider
 from .stats import TeamStats

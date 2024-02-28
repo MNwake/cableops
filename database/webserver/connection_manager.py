@@ -28,12 +28,18 @@ class ConnectionManager:
         print('Connections per path:', self.connections_per_path)
 
     def disconnect(self, websocket: WebSocket, path: str):
+        print('disconnect start')
+        print(self.active_connections)
+        print(self.connections_per_path[path])
+        print(path)
         if path in self.active_connections:
-            try:
-                self.active_connections[path].remove(websocket)
-                self.connections_per_path[path] -= 1
-            except ValueError:
-                pass  # WebSocket object not found in the list, so ignore the error
+            # Use list comprehension to create a new list without the WebSocket object
+            self.active_connections[path] = [conn for conn in self.active_connections[path] if conn != websocket]
+            self.connections_per_path[path] = len(self.active_connections[path])
+        print('disconnect end')
+        print(self.active_connections)
+        print(self.connections_per_path[path])
+        print(path)
 
     async def broadcast(self, data: str, path: str):
         if path in self.active_connections:

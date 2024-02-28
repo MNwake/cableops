@@ -23,20 +23,111 @@ class RiderStats(db.Document):
     }
 
     @classmethod
-    async def get_rider_stats(cls, rider_id=None):
+    def get_rider_division(cls, rider_id):
+        stat = cls.objects(rider=rider_id).order_by('-year').first()
+        if stat and stat.overall:
+            overall_stats = stat.cwa
 
-        print('get_rider_stats - rider id:', rider_id)
-        if rider_id:
-            return await cls.objects(rider_id=rider_id).first()
-        else:
-            return await cls.objects().all()
+            # Iterate through the overall stats to find the division mean
+            for stat_item in overall_stats:
+                if 'score' in stat_item:
+                    division_mean = stat_item['score'].get('division', {}).get('mean')
+                    if division_mean is not None:
+                        return division_mean
+        return None
 
+    @classmethod
+    def get_rider_stats(cls, stat_id=None, rider_id=None, year=None, cursor=None, limit=20):
+        query_params = {}
+
+        # Default to the current year if 'year' is not provided
+        if year is None:
+            year = datetime.now().year
+
+        # Add query parameters based on provided arguments
+        if stat_id is not None:
+            query_params['id'] = stat_id  # Assuming 'id' is the field for stat ID
+        if rider_id is not None:
+            query_params['rider'] = rider_id
+        if year is not None:
+            query_params['year'] = year
+
+        # Create the initial query with the parameters
+        rider_stats_query = cls.objects(**query_params).order_by('id')
+
+        # Apply cursor for pagination
+        if cursor:
+            rider_stats_query = rider_stats_query.filter(id__gt=cursor)
+
+        # Return the query results limited by the batch size
+        return rider_stats_query.limit(limit)
+
+    @classmethod
+    def get_rider_ranking(cls, rider_id):
+        # Fetch the latest stats for all riders
+        all_riders_stats = cls.objects().order_by('-year').all()
+
+        # Create a list of tuples (rider_id, division_mean)
+        rider_scores = []
+        for stats in all_riders_stats:
+            for cwa_item in stats.cwa:
+                score = cwa_item.get('score', {}).get('division', {}).get('mean')
+                if score is not None:
+                    rider_scores.append((str(stats.rider.id), score))
+
+        # Sort the list by division_mean in descending order
+        sorted_scores = sorted(rider_scores, key=lambda x: x[1], reverse=True)
+
+        # Find the rank of the specified rider
+        for rank, (rider_id_iter, _) in enumerate(sorted_scores, start=1):
+            if rider_id_iter == str(rider_id):
+                return rank
+
+        return None
+
+    @classmethod
+    def get_mean_score(cls, rider_id, stat_type):
+        stat = cls.objects(rider=rider_id).order_by('-year').first()
+        if not stat:
+            return None
+
+        if stat_type not in ['overall', 'top_10', 'cwa', 'best_trick']:
+            return None
+
+        stat_list = getattr(stat, stat_type)
+        if not stat_list:
+            return None
+
+        scores = {}
+        for stat_item in stat_list:
+            for section, values in stat_item.items():
+                for key, value in values.items():
+                    if 'mean' in value:
+                        scores[f"{section}_{key}"] = value['mean']
+
+        return scores
+
+    @classmethod
+    def get_cwa_score(cls, rider_id):
+        return cls.get_mean_score(rider_id, 'cwa')
+
+    @classmethod
+    def get_overall_score(cls, rider_id):
+        return cls.get_mean_score(rider_id, 'overall')
+
+    @classmethod
+    def get_top_ten_score(cls, rider_id):
+        return cls.get_mean_score(rider_id, 'top_10')
+
+    @classmethod
+    def get_best_trick_score(cls, rider_id):
+        return cls.get_mean_score(rider_id, 'best_trick')
 
     def calculate_stats(self):
         start_time = time.time()  # Start the timer
 
         # Fetch scorecards for the rider
-        df = DataFrame(Scorecard.get_scorecards_by_rider(self.rider))
+        df = DataFrame(Scorecard.get_scorecards(rider_ids=self.rider))
         df['_id'] = df['_id'].astype(str)
         df['date'] = to_datetime(df['date'])
 
@@ -146,6 +237,7 @@ class RiderStats(db.Document):
 
         # Step 6: Return the two DataFrames as a list of dictionaries
         return [{'section': section_summary.to_dict()}, {'score': score_summary.to_dict()}]
+
 
 
 class TeamStats(db.Document):

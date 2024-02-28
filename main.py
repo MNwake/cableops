@@ -71,7 +71,7 @@ class CableOps(MDApp):
     def build(self) -> MDScreenManager:
         self.theme_cls.primary_palette = 'Aliceblue'
         self.theme_cls.theme_style = 'Dark'
-        self.theme_cls.dynamic_color = True
+        # self.theme_cls.dynamic_color = False
         self.generate_application_screens()
 
         return self.manager_screens
