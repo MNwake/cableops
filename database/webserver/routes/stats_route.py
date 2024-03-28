@@ -1,21 +1,22 @@
 import json
-from pprint import pprint
-from typing import Optional, List, Tuple
+from typing import Optional, List
 
 from fastapi import APIRouter, WebSocket, HTTPException
 from starlette.websockets import WebSocketDisconnect
 
 from database.base_models import RiderStatsBase
-from database.events import RiderStats
-from database.webserver.encoder import custom_encoder
+
+
+# Will print all messages from debug and above
+
 
 
 class StatsRoute:
-    def __init__(self, manager):
+    def __init__(self, connection_manager, server_memory):
         self.router = APIRouter()
-        self.manager = manager
+        self.manager = connection_manager
+        self.memory = server_memory
         self.define_routes()
-        self.pydantic_stats = None
 
     def define_routes(self):
         @self.router.websocket("/ws/rider")
@@ -42,25 +43,30 @@ class StatsRoute:
                             stat_id: Optional[str] = None,
                             rider_id: Optional[str] = None,
                             year: Optional[int] = None,
-                            batch_size: Optional[int] = 20) -> Tuple[List[RiderStatsBase], str | None]:
+                            batch_size: Optional[int] = None) -> dict[str, List[RiderStatsBase] | str | None]:
             try:
-                # Retrieve matching rider stats based on query parameters
-                stats = RiderStats.get_rider_stats(stat_id=stat_id, rider_id=rider_id, year=year, cursor=cursor,
-                                                   limit=batch_size)
+                # Filter the stats from memory based on query parameters
+                filtered_stats = [stat for stat in self.memory.stats if
+                                  (not stat_id or str(stat.id) == stat_id) and
+                                  (not rider_id or stat.rider == rider_id) and
+                                  (not year or stat.year == year)]
 
-                # Extract the IDs and convert them to strings
-                stat_ids = [str(stat.id) for stat in stats]
+                # Apply pagination if needed
+                if cursor:
+                    cursor_index = next((index for index, stat in enumerate(filtered_stats) if str(stat.id) == cursor),
+                                        -1)
+                    filtered_stats = filtered_stats[cursor_index + 1:]  # Skip past the cursor
+                if batch_size:
+                    filtered_stats = filtered_stats[:batch_size]
 
-                # Match Pydantic stats with the retrieved IDs
-                matched_stats = [stat for stat in self.pydantic_stats if str(stat.id) in stat_ids]
+                # Prepare next cursor
+                next_cursor = str(filtered_stats[-1].id) if filtered_stats else None
 
-                # Determine the next cursor
-                next_cursor = str(matched_stats[-1].id) if matched_stats else None
-
-                return matched_stats, next_cursor
+                return {'data': filtered_stats, 'cursor': next_cursor}
 
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
+
 
     def handle_request(self, websocket, request_type, message_data):
         pass

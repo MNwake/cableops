@@ -6,8 +6,9 @@ class Park(db.Document):
     state = db.StringField()
     abbreviation = db.StringField()
     team = db.ReferenceField('Team')
-    cable = db.ListField(db.ReferenceField('Cable'))
+    # cable = db.ListField(db.ReferenceField('Cable'))
     riders_checked_in = db.ListField(db.ReferenceField('Rider'))
+
 
     @classmethod
     def get_parks(cls, cursor=None, park_id=None, name=None, state=None, team=None, cable=None, limit=20):

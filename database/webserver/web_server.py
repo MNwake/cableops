@@ -1,42 +1,59 @@
 import asyncio
 import os
 import threading
-import time
 
 import uvicorn
 from bson import ObjectId
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse
+from starlette.staticfiles import StaticFiles
 
-from database.base_models import RiderStatsBase, ParkBase
-from database.base_models.scorecard_base import ScorecardBase
-from database import Rider, Scorecard, Park
-from database.base_models import RiderBase
-from database.events import RiderStats
+from database import ServerMemory
+from database.database_converter import DatabaseConverter
+
 from database.utils import custom_json_encoder
 from .connection_manager import ConnectionManager
 from .routes import StatsRoute, ScorecardRoutes, RiderRoutes
-from .routes.parks_route import ParksRoute
+from .routes.contest_routes import ContestRoutes
+from .routes.parks_route import ParkRoutes
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-HTML_FILE = os.path.join(BASE_DIR, 'website/index.html')
+ROOT_HTML = os.path.join(BASE_DIR, 'website/index.html')
+PRIVACY_HTML = os.path.join(BASE_DIR, 'website/privacy_policy.html')
+
+
+class RouteManager:
+
+    def __init__(self, connection, memory):
+        self.connection = connection
+        self.parks_route = ParkRoutes(connection, memory)
+        self.riders_route = RiderRoutes(connection, memory)
+        self.stats_route = StatsRoute(connection, memory)
+        self.contest_route = ContestRoutes(connection, memory)
+        self.scorecard_route = ScorecardRoutes(connection, memory)
+
+    def setup_routes(self, app):
+        app.include_router(self.riders_route.router, prefix="/riders")
+        app.include_router(self.stats_route.router, prefix="/stats")
+        app.include_router(self.scorecard_route.router, prefix="/scorecards")
+        app.include_router(self.parks_route.router, prefix="/parks")
+        app.include_router(self.contest_route.router, prefix="/contest")
 
 
 class FastAPIApp:
     def __init__(self, database):
-        self.app = FastAPI(json_encoders={ObjectId: custom_json_encoder})
-        self.database = database
+        self.app = FastAPI(json_encoders={type: custom_json_encoder})
         self.initialized = False
+        self.database = database
         self.manager = ConnectionManager()
-        self.parks_route = ParksRoute(self.manager)
-        self.riders_route = RiderRoutes(self.manager)
-        self.stats_route = StatsRoute(self.manager)
-        self.scorecard_route = ScorecardRoutes(self.manager, self)
-        self.rider_base = RiderBase
-        self.setup_routes()
+        self.memory = ServerMemory()
+        self.router = RouteManager(self.manager, self.memory)
+        self.router.setup_routes(self.app)
+        self.app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "website", "static")), name="static")
 
     async def initialize(self):
-        await self.convert_data()
+
+        await self.memory.load_data()
 
     def start_fastapi_initialization(self):
         # Function to run the asyncio event loop
@@ -49,62 +66,17 @@ class FastAPIApp:
         initialization_thread = threading.Thread(target=self.start_fastapi_initialization)
         initialization_thread.start()
 
-    def setup_routes(self):
-        self.app.include_router(self.riders_route.router, prefix="/riders")
-        self.app.include_router(self.stats_route.router, prefix="/stats")
-        self.app.include_router(self.scorecard_route.router, prefix="/scorecards")
-        self.app.include_router(self.parks_route.router, prefix="/parks")
-
         @self.app.get("/")
         async def read_root():
-            return FileResponse(HTML_FILE)
+            return FileResponse(ROOT_HTML)
+
+        @self.app.get("/privacy")
+        async def read_root():
+            return FileResponse(PRIVACY_HTML)
 
         @self.app.get("/ping")
         async def ping():
             return {"status": "OK"}
 
-
     def run(self):
-        uvicorn.run(self.app, host="0.0.0.0", port=8080)
-
-    async def convert_data(self):
-        start_time = time.time()
-
-        all_riders_time = time.time()
-        all_riders = Rider.objects().all()
-        print(f"Time taken to fetch all riders: {time.time() - all_riders_time:.2f} seconds")
-
-        all_stats_time = time.time()
-        all_stats = RiderStats.objects().all()
-        print(f"Time taken to fetch all stats: {time.time() - all_stats_time:.2f} seconds")
-
-        all_parks_time = time.time()
-        all_parks = Park.objects().all()
-        print(f"Time taken to fetch all parks: {time.time() - all_parks_time:.2f} seconds")
-
-        recent_scorecards_time = time.time()
-        recent_scorecards = Scorecard.objects().order_by('-date').limit(100)
-
-
-        print(f"Time taken to fetch 100 most recent scorecards: {time.time() - recent_scorecards_time:.2f} seconds")
-
-        print(f"Total time taken: {time.time() - start_time:.2f} seconds")
-
-
-        conversion_time = time.time
-        # Now pass the awaited statistics to the mongo_to_pydantic method
-        print('starting parks conversion')
-        self.parks_route.pydantic_parks = ParkBase.mongo_to_pydantic(all_parks)
-        print('starting riders conversion')
-        self.riders_route.pydantic_riders = RiderBase.mongo_to_pydantic(all_riders)
-        print('starting stats conversion')
-        self.stats_route.pydantic_stats = RiderStatsBase.mongo_to_pydantic(all_stats)
-        print('starting scorecard conversion')
-        self.scorecard_route.pydantic_scorecards = ScorecardBase.mongo_to_pydantic(recent_scorecards)
-
-        end_time = time.time()
-        execution_time = end_time - start_time
-        self.initialized = True
-        print(f"Pydantic Conversion time: {conversion_time} seconds")
-        print(f"execution time: {execution_time} seconds")
-
+        uvicorn.run(self.app, host="0.0.0.0", port=8000, log_level="debug")

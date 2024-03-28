@@ -1,36 +1,31 @@
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 
+from database.cable import Cable
+from database.events import Rider
+
+
 class ParkBase(BaseModel):
-    id: str = Field(default_factory=lambda: str(ObjectId()))
+    id: str
     name: str
     state: Optional[str] = None
     abbreviation: Optional[str] = None
     team: Optional[str] = None
-    cable: Optional[List[str]] = []
+    # cable: Optional[List[str]] = []
     riders_checked_in: Optional[List[str]] = []
 
-    @classmethod
-    def mongo_to_pydantic(cls, parks):
-        """
-        Convert MongoDB Park objects to Pydantic ParkBase models.
+    @validator('id', pre=True)
+    def validate_id(cls, value):
+        if isinstance(value, ObjectId):
+            return str(value)
+        return value
 
-        :param parks: List of Park objects.
-        :return: Converted Pydantic ParkBase model(s).
-        """
-        converted_parks = []
+    @validator('riders_checked_in', each_item=True, pre=True)
+    def validate_lists(cls, value):
+        if isinstance(value, (Cable, Rider)):  # Assuming Cable and Rider are your MongoEngine models
+            return str(value.id)  # Replace with appropriate attribute if different
+        return value
 
-        for park in parks:
-            pydantic_park = cls(
-                id=str(park.id),
-                name=park.name,
-                state=park.state,
-                abbreviation=park.abbreviation,
-                team=str(park.team),
-                # cable=park.cable,
-                # riders_checked_in=[str(rider.id) for rider in park.riders_checked_in]
-            )
-            converted_parks.append(pydantic_park)
-
-        return converted_parks
+    class Config:
+        from_attributes = True

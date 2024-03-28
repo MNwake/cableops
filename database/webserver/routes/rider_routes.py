@@ -1,111 +1,91 @@
-import json
-from typing import Optional, Dict, Any, List
+import logging
+from typing import Any
 
-from fastapi import WebSocket, APIRouter, Query, HTTPException
-from starlette.websockets import WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, status
+from icecream import ic
 
-from database import Rider
-from database.base_models import RiderBase
+from database import ServerMemory
+from database.base_models import RiderBase, RiderProfileBase
+from database.events import Rider
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class RiderRoutes:
-    def __init__(self, manager):
+    def __init__(self, connection_manager, server_memory: ServerMemory):
         self.router = APIRouter()
-        self.manager = manager
+        self.manager = connection_manager
+        self.memory = server_memory
         self.rider_base = RiderBase
         self.define_routes()
-        self.pydantic_riders = None
 
     def define_routes(self):
-        @self.router.websocket("/ws")
-        async def rider_websocket(websocket: WebSocket):
-            await self.manager.connect(websocket, path="/riders/ws")
-            while True:
-                try:
-                    message = await websocket.receive_text()
-                    if message:
-                        message_data = json.loads(message)
-                        request_type = message_data.get("request_type")
-                        if request_type:
-                            await self.handle_request(websocket, request_type, message_data)
-                        else:
-                            await websocket.send_json({"error": "Invalid request format"})
-                except WebSocketDisconnect as e:
-                    print('websocketdisconnect', e)
-                finally:
-                    pass
 
         @self.router.get("")
-        async def get_riders(cursor: Optional[str] = None,
-                             home_park_id: Optional[str] = None,
-                             min_age: Optional[int] = None,
-                             max_age: Optional[int] = None,
-                             gender: Optional[str] = Query(None, enum=['male', 'female']),
-                             stance: Optional[str] = Query(None, enum=['regular', 'goofy']),
-                             year_started: Optional[str] = None,
-                             rider_id: Optional[str] = Query(None, description="Comma-separated rider IDs"),
-                             name: Optional[str] = Query(None, description="Search by first or last name"),
-                             ) -> str | dict[str, list[Any] | str | None]:
+        async def get_riders() -> dict[str, list[Any] | str]:
             try:
-                if not self.pydantic_riders:
-                    return 'database not loaded'
+                # print(f"Sending batch of {len(self.pydantic_riders)} riders")
+                # rider_data = [rider.serialize() for rider in self.pydantic_riders]
 
-                # Retrieve matching rider IDs based on query parameters
-                riders = Rider.get_riders(home_park_id=home_park_id, min_age=min_age, max_age=max_age,
-                                          gender=gender, stance=stance, year_started=year_started,
-                                          rider_id=rider_id, name=name, cursor=cursor)
-                print('rider id', riders[0].id)
-                # Extract the IDs and convert them to strings
-                rider_ids = [str(rider.id) for rider in riders]
-
-                # Match Pydantic riders with the retrieved IDs
-                matched_riders = [rider for rider in self.pydantic_riders if str(rider.id) in rider_ids]
-
-                print(f"Sending batch of {len(matched_riders)} matched riders")
-
-                # Determine the next cursor
-                next_cursor = str(matched_riders[-1].id) if matched_riders else None
-
-                # Return a dictionary with data and cursor
-                return {"data": matched_riders, "cursor": next_cursor}
+                return {"data": self.memory.riders}
 
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
 
-    async def handle_request(self, websocket: WebSocket, request_type: str, message_data: dict):
-        handlers = {
-            "rider_id": self.get_rider_by_id,
-            # "rider_stats": self.get_rider_stats,
-            "create_rider": self.create_rider,
-            # Add more request types and corresponding handler methods as needed
-        }
-        handler = handlers.get(request_type)
-        if handler:
-            await handler(websocket, message_data)
-        else:
-            await websocket.send_json({"error": "Unsupported request type"})
+        @self.router.post("/update")
+        async def update_rider(rider_data: dict) -> dict:
+            try:
+                # Update MongoDB database and retrieve the updated rider
+                updated_rider_mongo = RiderBase.update_or_create_rider(rider_data)
 
-    async def get_rider_by_id(self, websocket: WebSocket, message_data: dict):
-        rider_id_list = message_data.get("rider_id")
-        if rider_id_list:
-            riders = [await self.rider_base.fetch_rider_by_id(rider_id) for rider_id in rider_id_list]
-            await websocket.send_json([rider.dict() for rider in riders])
-        else:
-            await websocket.send_json({"error": "Invalid request format for rider_id"})
+                # Convert the updated MongoDB document to a Pydantic model
+                updated_rider_pydantic = RiderBase.from_orm(updated_rider_mongo)
+                self.update_pydantic_list(updated_rider_pydantic)
 
-    # TODO move to stats route
-    # async def get_rider_stats(self, websocket: WebSocket, message_data: dict):
-    #     rider_id = message_data.get("rider_id")
-    #     if rider_id:
-    #         rider_stats = await self.rider_base.fetch_rider_stats(rider_id)
-    #         await websocket.send_json(rider_stats.dict())
-    #     else:
-    #         await websocket.send_json({"error": "Invalid request format for rider_stats"})
+                return {"success": True, "rider_id": str(updated_rider_pydantic.id)}
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=str(e))
 
-    async def create_rider(self, websocket: WebSocket, message_data: dict):
-        rider_data_list = message_data.get("rider_data")
-        if rider_data_list:
-            new_riders = [await self.rider_base.create_new_rider(rider_data) for rider_data in rider_data_list]
-            await self.manager.broadcast_new_riders([rider.dict() for rider in new_riders])
+        @self.router.post("/create")
+        async def create_rider() -> dict:
+            try:
+                # Here, add your logic to create a new rider in the database.
+                # For now, I'm just generating a mock UUID.
+                new_rider = Rider()
+                new_rider.save()
+
+                # Save the new rider in the database and get the rider ID
+                # rider = YourDatabaseModel.create(...)
+                # new_rider_id = str(rider.id)
+
+                return {"success": True, "rider_id": str(new_rider.id)}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+
+        @self.router.get("/profile/{rider_id}", response_model=RiderProfileBase)
+        async def get_rider_profile(rider_id: str):
+            try:
+                profile = self.memory.get_rider_profile(rider_id)
+                if profile is None:
+                    # If no profile found, return a 404 status code with a custom message
+                    return HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Rider profile not found."
+                    )
+                return profile
+            except Exception as e:
+                # For other exceptions, return a 500 status code with the error message
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=str(e)
+                )
+
+    def update_pydantic_list(self, updated_rider_pydantic):
+        # Find and update or add the Pydantic rider in the list
+        for i, pydantic_rider in enumerate(self.memory.riders):
+            if pydantic_rider.id == updated_rider_pydantic.id:
+                self.memory.riders[i] = updated_rider_pydantic
+                break
         else:
-            await websocket.send_json({"error": "Invalid request format for create_rider"})
+            self.memory.riders.append(updated_rider_pydantic)

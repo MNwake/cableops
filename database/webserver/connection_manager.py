@@ -1,47 +1,41 @@
-from typing import List, Dict
+import json
+from typing import Dict, Tuple, Any
 
-from starlette.websockets import WebSocket
+from fastapi import WebSocket
+from icecream import ic
 
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Dict[str, List[WebSocket]] = {}
-        self.connections_per_path: Dict[str, int] = {}
+        self.active_connections: Dict[str, Tuple[WebSocket, str]] = {}
+        self.total_connections: int = 0
 
-    async def connect(self, websocket: WebSocket, path: str):
+    async def connect(self, websocket: WebSocket):
         await websocket.accept()
-        if path not in self.active_connections:
-            print('path', path)
-            self.active_connections[path] = []
-            self.connections_per_path[path] = 0
-        self.active_connections[path].append(websocket)
-        self.connections_per_path[path] += 1
 
-        # Print information about the new connection
-        print('New connection:', websocket.client, 'to path:', path)
+    async def disconnect(self, user_uuid: str):
+        if user_uuid in self.active_connections:
+            del self.active_connections[user_uuid]
+            self.total_connections -= 1
+            print(f"Disconnected: {user_uuid}. Total connections: {self.total_connections}")
 
-        # Print total number of connections
-        total_connections = sum(len(connections) for connections in self.active_connections.values())
-        print('Total connections:', total_connections)
+    async def broadcast(self, type: str, data: Any):
+        serialized_data = json.dumps(data) if isinstance(data, dict) else data
+        formatted_message = json.dumps({"type": type, "data": serialized_data})
+        for websocket, _ in self.active_connections.values():
+            try:
+                await websocket.send_text(formatted_message)
+                if type == "stats":
+                    print("broadcast", formatted_message)
 
-        # Print connections per path
-        print('Connections per path:', self.connections_per_path)
+            except Exception as e:
+                print(f"Error sending message: {e}")
 
-    def disconnect(self, websocket: WebSocket, path: str):
-        print('disconnect start')
-        print(self.active_connections)
-        print(self.connections_per_path[path])
-        print(path)
-        if path in self.active_connections:
-            # Use list comprehension to create a new list without the WebSocket object
-            self.active_connections[path] = [conn for conn in self.active_connections[path] if conn != websocket]
-            self.connections_per_path[path] = len(self.active_connections[path])
-        print('disconnect end')
-        print(self.active_connections)
-        print(self.connections_per_path[path])
-        print(path)
+    async def register(self, websocket: WebSocket, user_uuid: str, path: str):
+        if user_uuid:
+            self.active_connections[user_uuid] = (websocket, path)
+            self.total_connections += 1  # Increment total connections
+            print(f"Registered {user_uuid} on path {path}. Total connections: {self.total_connections}")
+        else:
+            print("User UUID not provided for registration")
 
-    async def broadcast(self, data: str, path: str):
-        if path in self.active_connections:
-            for connection in self.active_connections[path]:
-                await connection.send_text(data)

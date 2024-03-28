@@ -10,6 +10,7 @@ You can read more about this template at the links below:
 https://github.com/HeaTTheatR/LoginAppMVC
 https://en.wikipedia.org/wiki/Model–view–controller
 """
+import logging
 import sys
 
 from kivy.core.window import Window
@@ -17,10 +18,14 @@ from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 
 from View.screens import screens
-from database import FastAPIApp, DataBase
+from database import DataBase
+from database.webserver import FastAPIApp
+
 
 if 'linux' in sys.platform:
     Window.size = (1000, 900)
+    import RPi.GPIO as GPIO
+    GPIO.setwarnings(False)
 
 import subprocess
 
@@ -57,8 +62,6 @@ def sync_files():
         print(e.stderr.decode())
 
 
-# Start the FastAPI server
-
 class CableOps(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -67,7 +70,7 @@ class CableOps(MDApp):
         self.manager_screens = MDScreenManager()
         self.fastapi = FastAPIApp(self.connection)
         self.fastapi.start_fastapi_server()
-
+        logging.basicConfig(level=logging.DEBUG)
     def build(self) -> MDScreenManager:
         self.theme_cls.primary_palette = 'Aliceblue'
         self.theme_cls.theme_style = 'Dark'
@@ -105,8 +108,9 @@ class CableOps(MDApp):
 
 
 if __name__ == '__main__':
+    print('Hello World!')
     if 'darwin' in sys.platform:
         sync_files()
-
+    db = DataBase()
     # Run Kivy application
     CableOps().run()

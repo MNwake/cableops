@@ -1,83 +1,37 @@
-from typing import List
+from datetime import datetime
 
-import mongoengine as db
 from firebase_admin import storage
+from mongoengine import IntField, StringField, ReferenceField, DateTimeField, BooleanField, FloatField
 
-from database.events import User, RiderStats
+from database.events import User, Park
 
 
 class Rider(User):
-    stance = db.StringField()
-    year_started = db.IntField()
-    home_park = db.ReferenceField('Park')
-    statistics = db.ReferenceField('RiderStats')
+    stance = StringField()
+    year_started = IntField()
+    home_park = ReferenceField('Park')
+    statistics = ReferenceField('RiderStats')
+    division = FloatField()
+    is_registered = BooleanField()
+    waiver_date = DateTimeField(db_field='waiver_date')
+    waiver_url = StringField()
 
-    @classmethod
-    def get_riders(cls, batch_size=50, cursor=None, home_park_id=None, min_age=None, max_age=None, gender=None,
-                       stance=None, year_started=None, rider_id=None, name=None):
-        query_params = {}
 
-        # Add query parameters based on provided arguments
-        if home_park_id is not None:
-            query_params['home_park'] = home_park_id
-        if min_age is not None:
-            query_params['age__gte'] = min_age  # Assuming 'age' field and 'gte' for greater than or equal
-        if max_age is not None:
-            query_params['age__lte'] = max_age  # Assuming 'age' field and 'lte' for less than or equal
-        if gender is not None:
-            query_params['gender'] = gender
-        if stance is not None:
-            query_params['stance'] = stance
-        if year_started is not None:
-            query_params['year_started'] = year_started
-        if rider_id is not None:
-            query_params['id'] = rider_id  # Assuming 'id' is the field for rider ID
-        if name is not None:
-            query_params[
-                'name__icontains'] = name  # Assuming 'name' field and 'icontains' for case-insensitive containment
 
-        # Create the initial query with the parameters
-        query = cls.objects(**query_params).order_by('id')
-        if cursor:
-            # Assuming cursor is the ID of the last document in the previous batch
-            query = query.filter(id__gt=cursor)
-        # Return only the IDs of the riders
-        return query.limit(batch_size)
-
-        # If sort_by is not provided, return the result without sorting
-
-    @property
-    def division(self):
-        # Fetch the latest RiderStats for this rider
-        return RiderStats.get_rider_division(self.id)
-
-    @property
-    def ranking(self):
-        return RiderStats.get_rider_ranking(self.id)
-
-    @property
-    def cwa_score(self):
-        return RiderStats.get_cwa_score(self.id)
-
-    @property
-    def overall_score(self):
-        return RiderStats.get_overall_score(self.id)
-
-    @property
-    def top_ten_score(self):
-        return RiderStats.get_top_ten_score(self.id)
-
-    @property
-    def best_trick_score(self):
-        return RiderStats.get_best_trick_score(self.id)
-
-    def set_image(self, image_path):
+    def set_image(self, image_path, image_type):
         try:
             # Get the storage bucket
             bucket = storage.bucket()
 
-            # Specify the path within the storage bucket
-            storage_path = f'Rider/Images/{self.id}'
+            # Determine the storage path based on image type
+            if image_type == 'profile':
+                storage_path = f'Rider/ProfileImages/{self.id}'
+                attribute = 'profile_image'
+            elif image_type == 'waiver':
+                storage_path = f'Rider/WaiverImages/{self.id}'
+                attribute = 'waiver_url'
+            else:
+                raise ValueError("Invalid image type specified.")
 
             # Create a blob in the storage bucket and upload the file
             blob = bucket.blob(storage_path)
@@ -86,14 +40,48 @@ class Rider(User):
             # Make the blob publicly accessible
             blob.make_public()
 
-            # Get the public URL
+            # Get the public URL and update the appropriate attribute
             url = blob.public_url
+            setattr(self, attribute, url)
 
-            # Save the URL to the MongoDB
-            self.profile_image = url
-            # self.save()
-            return self.profile_image
+            # Save the changes to the MongoDB
+            self.save()
+            return getattr(self, attribute)
 
         except Exception as e:
-            print(f"Failed to set image for rider: {self.full_name}. Image path: {image_path}")
+            print(f"Failed to set {image_type} image for rider: {self.full_name}. Image path: {image_path}")
             print(f"Error: {e}")
+
+    def to_dict(self):
+        """Convert MongoDB document to a dictionary with formatted dates."""
+        data = self.to_mongo().to_dict()
+        for field in ['date_of_birth', 'date_created', 'waiver_date']:
+            if data.get(field):
+                data[field] = data[field].strftime("%Y-%m-%dT%H:%M:%S")
+        return data
+
+    def update_fields(self, updates: dict):
+        exclude_keys = ['date_created', 'division', 'statistics', 'score']
+        print('Updating Fields')
+
+        # Convert and validate date fields before updating the object
+        for field in ['date_of_birth', 'waiver_date']:
+            if field in updates:
+                try:
+                    # Convert the string to a datetime object
+                    updates[field] = datetime.strptime(updates[field], "%Y-%m-%dT%H:%M:%S")
+                except ValueError:
+                    raise ValueError(f"Invalid date format for {updates[field]}")
+
+        for key, value in updates.items():
+            if key not in exclude_keys and value is not None and hasattr(self, key):
+                # Special handling for home_park
+                if key == 'home_park':
+                    # Assuming value is the ID of the Park and Park is your model
+                    park = Park.objects(id=value).first()
+                    if park:
+                        print(f"Updating field {key} with Park object")
+                        setattr(self, key, park)
+                else:
+                    print(f"Updating field {key} with value {type(value)}: {value},")
+                    setattr(self, key, value)

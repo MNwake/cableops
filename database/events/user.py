@@ -5,16 +5,18 @@ import mongoengine as db
 
 class User(db.Document):
     email = db.StringField()
-    password = db.StringField()
-    first_name = db.StringField(required=True)
-    last_name = db.StringField(required=True)
+    first_name = db.StringField()
+    last_name = db.StringField()
     date_of_birth = db.DateTimeField()
     gender = db.StringField()
-    date_created = db.DateTimeField(default=datetime.utcnow)
+    date_created = db.DateTimeField(default=datetime.now())
     profile_image = db.StringField(
         default='https://firebasestorage.googleapis.com/v0/b/the-cwa.appspot.com/o/default-avatar.png?alt=media&token=c069e515-fb20-48eb-847b-b3ef48f58c7e')
 
     meta = {'allow_inheritance': True}
+
+    class Config:
+        from_attributes = True
 
     @property
     def age(self):
