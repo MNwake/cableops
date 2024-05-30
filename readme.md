@@ -6,22 +6,29 @@ Welcome to the backend repository for the Cabled App. This backend is designed t
 
 This backend is written in Python and runs on a Raspberry Pi. It serves multiple purposes:
 
-- **Active Webserver:** Hosts an API that feeds data to users and provides live updates as data changes.
-- **Data Processing:** Receives rider scores from a separate judges' mobile app, processes the data in Python, updates rider statistics, and broadcasts the updates to all active users.
-- **Robotics:** Controls the cable wakeboard park system by connecting the Raspberry Pi to multiple motors, switches, and drivers.
+- **API and Webserver:** Hosts an API that feeds data to users and provides live updates as data changes.
+- **Robotics Control:** Connects the Raspberry Pi to multiple motors, switches, and drivers to control the cable system.
+- **Graphical User Interface:** Provides a GUI built in Python using Kivy, utilizing the MVC architecture to give the operator complete control over the cable system.
 
 ## Features
 
-### Webserver and API
+### API and Webserver
 
 - Hosts a FastAPI to provide data to the Cabled mobile app.
+- Processes incoming data from the judges' app and updates rider statistics instantly.
 - Provides real-time updates to users as data changes.
-- Processes incoming data from thee judges' app and updates rider statistics instantly.
 
-### Robotics Control
+### CableOps Control
 
 - Connects to multiple motors, switches, and drivers to control the cable system.
-- Allows for complete control of the cable system via a GUI built in Kivy.
+- Enables precise control of the cable system components.
+- Designed ready for AI and Machine Learning implementation. 
+
+### Graphical User Interface
+
+- Built in Python using Kivy.
+- Utilizes the MVC architecture to separate the concerns of the application.
+- Provides a user-friendly interface for the operator to control the cable system.
 
 ## Installation
 
