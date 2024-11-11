@@ -1,8 +1,9 @@
+from database.cable.park import Park
 from database.base_models.rider_base import calculate_cwa_rank, calculate_age_rank, calculate_experience_rank, \
     calculate_division_rank, RiderProfileBase
 from database.base_models import RiderBase, RiderStatsBase, ParkBase, ScorecardBase, ContestCarrierBase
-from database.events import Rider, Park, Scorecard
-from database.events import RiderStats, ContestCarrier
+from database.events import Rider, Scorecard
+from database.events import RiderCompStats, ContestCarrier
 
 
 class DatabaseConverter:
@@ -13,7 +14,7 @@ class DatabaseConverter:
 
 
     async def fetch_and_convert_stats(self):
-        all_stats = RiderStats.objects().all()
+        all_stats = RiderCompStats.objects().all()
         return [RiderStatsBase.from_orm(item) for item in all_stats]
 
 
@@ -47,6 +48,10 @@ class DatabaseConverter:
             division_rank = calculate_division_rank(rider.id, memory.rider_rankings_by_division, division_score)
             tricks = Scorecard.get_trick_statistics(rider.id) or {}
 
+            mongo_rider = Rider.objects(id=rider.id).first()
+            mongo_rider.division = division_score
+            mongo_rider.save()
+
             # Calculate trick counts
             overall_count, cwa_count, attempted_count = Scorecard.calculate_score_counts(rider.id)
             profile = RiderProfileBase(
@@ -62,8 +67,8 @@ class DatabaseConverter:
                 attempted_count=int(attempted_count)
             )
             profiles.append(profile)
-
         return profiles
+
 
 
 

@@ -13,7 +13,11 @@ class User(db.Document):
     profile_image = db.StringField(
         default='https://firebasestorage.googleapis.com/v0/b/the-cwa.appspot.com/o/default-avatar.png?alt=media&token=c069e515-fb20-48eb-847b-b3ef48f58c7e')
 
-    meta = {'allow_inheritance': True}
+    meta = {
+        'allow_inheritance': True,  # Allow subclasses to inherit
+        'collection': 'user',  # Default collection for User
+        'alias': 'default'  # Connects to the main database alias
+    }
 
     class Config:
         from_attributes = True

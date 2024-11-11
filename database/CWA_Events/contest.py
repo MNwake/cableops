@@ -21,6 +21,7 @@ class Contest(db.Document):
     completed = db.BooleanField(default=False)
     live = db.BooleanField(default=False)
 
+    meta = {'db_alias': 'cable'}
     def go_live(self):
         # Set `live` field to False for all other contests
         all_live_contests = Contest.objects(live=True).all()

@@ -8,6 +8,7 @@ class PowerButton(MDButton):
     text = StringProperty(defaultvalue='Power Off')
 
     def on_is_cable_on(self, instance, value):
+        print('is cable on call')
         if value:
             self.style = 'filled'
             self.text = 'Power On'

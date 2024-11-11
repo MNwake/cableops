@@ -17,6 +17,7 @@ from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 
+from Utility.sync import sync_files
 from View.screens import screens
 from database import DataBase
 from database.webserver import FastAPIApp
@@ -44,22 +45,7 @@ else:
     })
 
 
-def sync_files():
-    rsync_command = [
-        "rsync",
-        "-avz",
-        "--delete",  # Add this line
-        "/Users/theokoester/dev/projects/python/CWA/cableops/",  # Source directory on Mac
-        "theokoester@raspi:/home/theokoester/dev/cableops/"  # Destination directory on Raspberry Pi
-    ]
-    try:
-        print('rsync')
-        result = subprocess.run(rsync_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("Rsync completed successfully")
-        print(result.stdout.decode())
-    except subprocess.CalledProcessError as e:
-        print("Error occurred while running rsync")
-        print(e.stderr.decode())
+
 
 
 class CableOps(MDApp):
@@ -70,7 +56,8 @@ class CableOps(MDApp):
         self.manager_screens = MDScreenManager()
         self.fastapi = FastAPIApp(self.connection)
         self.fastapi.start_fastapi_server()
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
+
     def build(self) -> MDScreenManager:
         self.theme_cls.primary_palette = 'Aliceblue'
         self.theme_cls.theme_style = 'Dark'
@@ -111,6 +98,6 @@ if __name__ == '__main__':
     print('Hello World!')
     if 'darwin' in sys.platform:
         sync_files()
-    db = DataBase()
+    # db = DataBase()
     # Run Kivy application
     CableOps().run()

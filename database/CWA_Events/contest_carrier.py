@@ -12,3 +12,4 @@ class ContestCarrier(db.Document):
 
 
 
+    meta = {'db_alias': 'cable'}

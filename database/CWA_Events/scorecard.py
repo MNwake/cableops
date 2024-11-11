@@ -25,6 +25,7 @@ class Scorecard(Document):
     park = ReferenceField("Park")
     judge = ReferenceField("Judge")
 
+    meta = {'db_alias': 'cable'}
 
     def to_dict(self):
         """Convert MongoDB document to a dictionary with formatted dates."""
@@ -87,6 +88,21 @@ class Scorecard(Document):
     def get_scorecards_by_rider(cls, rider):
         scorecards = cls.objects.filter(rider=rider)
         return [scorecard.to_mongo().to_dict() for scorecard in scorecards]
+
+    @classmethod
+    def get_all_scorecards(cls):
+        scorecards = cls.objects.all()
+        return [scorecard.to_mongo().to_dict() for scorecard in scorecards]
+
+    @classmethod
+    def get_scorecards_by_park(cls, park_id):
+        all_scorecards = []
+        from events import Rider
+        riders = Rider.objects(home_park=park_id)
+        for rider in riders:
+            scorecards = cls.objects.filter(rider=rider)
+            all_scorecards.extend(scorecards)
+        return [scorecard.to_mongo().to_dict() for scorecard in all_scorecards]
 
     @classmethod
     def get_trick_statistics(cls, rider_id):

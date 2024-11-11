@@ -5,12 +5,12 @@ from fastapi import APIRouter, Body, HTTPException, Query
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from database.base_models.scorecard_base import ScorecardBase
-from database.events import RiderStats, Rider, Park, Scorecard
+from database.events import RiderCompStats, Rider, Scorecard
 
 
 class ScorecardRoutes:
     def __init__(self, connection_manager, server_memory):
-        self.router = APIRouter()
+        self.router = APIRouter(tags=["Cable"])
         self.manager = connection_manager
         self.define_routes()
         self.memory = server_memory

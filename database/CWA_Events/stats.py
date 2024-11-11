@@ -3,14 +3,15 @@ from datetime import datetime
 from mongoengine import DictField, ReferenceField, IntField, Document, FloatField
 
 
-
-class RiderStats(Document):
+class RiderCompStats(Document):
     rider = ReferenceField('Rider', required=True)
     year = IntField(default=datetime.now().year)
+
     division = FloatField()
     overall = DictField()  # Field to store overall rankings
     top_10 = DictField()  # Field to store riders top 10 scorecards
     cwa = DictField()  # CWA score metrics
+
     attempted = DictField()
     best_trick = DictField()
     kicker_stats = DictField()
@@ -20,16 +21,18 @@ class RiderStats(Document):
     meta = {
         'indexes': [
             {'fields': ['rider', 'year'], 'unique': True}
-        ]
+        ],
+        'db_alias': 'cable'
     }
 
-    def to_dict(self):
-        """Convert MongoDB document to a dictionary with formatted dates."""
-        data = self.to_mongo().to_dict()
-        for field in ['date_of_birth', 'date_created', 'waiver_date']:
-            if data.get(field):
-                data[field] = data[field].strftime("%Y-%m-%dT%H:%M:%S")
-        return data
+
+    # def to_dict(self):
+    #     """Convert MongoDB document to a dictionary with formatted dates."""
+    #     data = self.to_mongo().to_dict()
+    #     for field in ['date_of_birth', 'date_created', 'waiver_date']:
+    #         if data.get(field):
+    #             data[field] = data[field].strftime("%Y-%m-%dT%H:%M:%S")
+    #     return data
 
     @classmethod
     def get_rider_division(cls, rider_id):
@@ -250,7 +253,16 @@ class RiderStats(Document):
 
         return None
 
+class RidingStats(Document):
+    """
 
+    Keep track of days checked in,
+    sessions per day
+    # laps per session
+    lap count per day
+    total lap count
+
+    """
 
 class TeamStats(Document):
     pass

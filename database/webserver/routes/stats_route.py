@@ -13,7 +13,7 @@ from database.base_models import RiderStatsBase
 
 class StatsRoute:
     def __init__(self, connection_manager, server_memory):
-        self.router = APIRouter()
+        self.router = APIRouter(tags=["Cable"])
         self.manager = connection_manager
         self.memory = server_memory
         self.define_routes()

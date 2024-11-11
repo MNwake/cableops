@@ -16,7 +16,7 @@ class Cable(Document):
     magazine = EmbeddedDocumentField('Magazine')
     carriers = ListField(EmbeddedDocumentField('Carrier'))
 
-    # meta = {'db_alias': 'cable'}
+    meta = {'db_alias': 'cable'}
 
     def __init__(self, *args, **values):
         super(Cable, self).__init__(*args, **values)

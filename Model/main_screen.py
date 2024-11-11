@@ -1,6 +1,5 @@
+from database.cable.park import Park
 from database.cable import Cable
-from database.events import Rider, Park
-
 from Model.base_model import BaseScreenModel
 
 

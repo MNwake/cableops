@@ -323,3 +323,36 @@ def replace_nan(data):
     return data
 
 
+def calculate_team_stats(df):
+    # Ensure the DataFrame is filtered for the desired conditions
+    filtered_df = df[(df['score'] > 50) & df['landed']]
+
+    # Section summary
+    section_summary = filtered_df.groupby('section')['score'].describe()
+
+    # Descriptive statistics for other metrics
+    score_summary = filtered_df[['division', 'execution', 'difficulty', 'creativity']].describe()
+
+    # Convert to dictionary
+    section_summary_dict = section_summary.transpose().to_dict()
+    score_summary_dict = score_summary.to_dict()
+
+
+    # Combine the data into a single dictionary
+    team_stats = {
+        'section': section_summary_dict,
+        'score': score_summary_dict,
+    }
+
+    return team_stats
+
+
+def calculate_team_stats_for_park(park_id):
+    # Fetch scorecards for the specified park
+    scorecards = Scorecard.get_scorecards_by_park(park_id)
+    scorecards_df = DataFrame(scorecards)
+
+    # Perform the calculation as in the previous example
+    team_stats = calculate_team_stats(scorecards_df)
+
+    return team_stats

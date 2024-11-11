@@ -3,7 +3,7 @@ from datetime import datetime
 from firebase_admin import storage
 from mongoengine import IntField, StringField, ReferenceField, DateTimeField, BooleanField, FloatField
 
-from database.events import User, Park
+from database.events import User
 
 
 class Rider(User):
@@ -16,7 +16,10 @@ class Rider(User):
     waiver_date = DateTimeField(db_field='waiver_date')
     waiver_url = StringField()
 
-
+    # meta = {
+    #     'collection': 'rider',  # Optional: specify collection name to differentiate from User
+    #     'db_alias': 'cable',  # Specifies the alias for the Cable database
+    # }
 
     def set_image(self, image_path, image_type):
         try:

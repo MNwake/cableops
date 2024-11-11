@@ -8,7 +8,7 @@ class Fork(EmbeddedDocument):
     engaged = BooleanField(default=False)
     callback = None  # Reference to the callback method
 
-    # meta = {'db_alias': 'cable'}
+    meta = {'db_alias': 'cable'}
 
     def __init__(self, **kw):
         super().__init__(**kw)

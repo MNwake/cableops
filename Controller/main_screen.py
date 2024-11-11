@@ -23,7 +23,6 @@ class MainScreenController:
 
     def get_view(self) -> CableMainScreen:
         return self.view
-
     def start_cable(self, dt=None):
         print('start cable controller')
         if self.model.cable.e_brake:

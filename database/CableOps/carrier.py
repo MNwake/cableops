@@ -10,7 +10,7 @@ class Carrier(EmbeddedDocument):
     _rider = ReferenceField('Rider')
     active = BooleanField(default=False)
 
-    # meta = {'db_alias': 'cable'}
+    meta = {'db_alias': 'cable'}
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -37,4 +37,5 @@ class Carrier(EmbeddedDocument):
 
     def lap(self):
         if self.rider:
+            self.rider.lap_count += 1
             self.lap_count += 1

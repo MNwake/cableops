@@ -6,7 +6,7 @@ from mongoengine import DoesNotExist
 
 from database import ServerMemory
 from database.base_models import ContestCarrierBase, RiderStatsBase, ScorecardBase
-from database.events import ContestCarrier, RiderStats
+from database.events import ContestCarrier, RiderCompStats
 from database.utils import calculate_stats, replace_nan
 from database.webserver import ResponseHandler
 
@@ -17,7 +17,7 @@ def find_carrier_by_session(session_id: str):
 
 class ContestRoutes:
     def __init__(self, connection_manager, server_memory: ServerMemory):
-        self.router = APIRouter()
+        self.router = APIRouter(tags=["Cable"])
         self.manager = connection_manager
         self.memory = server_memory
         self.contest_carrier_base = ContestCarrierBase
@@ -161,9 +161,9 @@ class ContestRoutes:
 
         # Update MongoDB document
         try:
-            mongo_stats = RiderStats.objects.get(rider=rider_id)
+            mongo_stats = RiderCompStats.objects.get(rider=rider_id)
         except DoesNotExist:
-            mongo_stats = RiderStats(rider=rider_id)
+            mongo_stats = RiderCompStats(rider=rider_id)
 
         for key, value in new_stats.items():
             setattr(mongo_stats, key, value)

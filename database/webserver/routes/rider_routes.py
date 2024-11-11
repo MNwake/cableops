@@ -1,20 +1,16 @@
-import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
-from icecream import ic
 
 from database import ServerMemory
 from database.base_models import RiderBase, RiderProfileBase
 from database.events import Rider
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class RiderRoutes:
     def __init__(self, connection_manager, server_memory: ServerMemory):
-        self.router = APIRouter()
+        self.router = APIRouter(tags=["Cable"])
         self.manager = connection_manager
         self.memory = server_memory
         self.rider_base = RiderBase
