@@ -1,4 +1,4 @@
-from database.events import User
+from database.CWA_Events import User
 
 
 class Admin(User):

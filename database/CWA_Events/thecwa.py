@@ -1,6 +1,6 @@
 import mongoengine as db
 
-from database.events import Rider, Scorecard, Contest
+from database.CWA_Events import Rider, Scorecard, Contest
 
 
 class TheCWA(db.Document):

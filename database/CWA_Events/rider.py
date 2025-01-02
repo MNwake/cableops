@@ -3,7 +3,7 @@ from datetime import datetime
 from firebase_admin import storage
 from mongoengine import IntField, StringField, ReferenceField, DateTimeField, BooleanField, FloatField
 
-from database.events import User
+from database.CWA_Events import User
 
 
 class Rider(User):

@@ -6,9 +6,9 @@ from mongoengine import DoesNotExist
 
 from database import ServerMemory
 from database.base_models import ContestCarrierBase, RiderStatsBase, ScorecardBase
-from database.events import ContestCarrier, RiderCompStats
+from database.CWA_Events import ContestCarrier, RiderCompStats
 from database.utils import calculate_stats, replace_nan
-from database.webserver import ResponseHandler
+from webserver import ResponseHandler
 
 
 def find_carrier_by_session(session_id: str):

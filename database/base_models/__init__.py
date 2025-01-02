@@ -1,6 +1,7 @@
 from .cable_base import CableBase
 from .carrier_base import CarrierBase
 from .contest_carrier_base import ContestCarrierBase
+from .cryptocurrency_base import Cryptocurrency
 from .fork_base import ForkBase
 from .magazine_base import MagazineBase
 from .park_base import ParkBase

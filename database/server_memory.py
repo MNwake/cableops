@@ -7,7 +7,7 @@ from database.base_models import RiderBase, RiderStatsBase, ScorecardBase, ParkB
 from database.base_models.rider_base import calculate_cwa_rank, calculate_age_rank, calculate_experience_rank, \
     calculate_division_rank
 from database.database_converter import DatabaseConverter
-from database.events import Scorecard
+from database.CWA_Events import Scorecard
 from database.utils import calculate_age_group, calculate_division
 
 
@@ -21,6 +21,7 @@ class ServerMemory:
         self.carriers: List[ContestCarrierBase] = []
         self.rider_profiles: List[RiderProfileBase] = []
         self.arider_profiles_map: dict[str, RiderProfileBase] = {}  # New attribute
+        self.accepted_currencies: dict
 
     async def load_data(self):
         # Start timing

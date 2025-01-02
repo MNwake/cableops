@@ -131,6 +131,42 @@ class CallDetails(Document):
 
         return data
 
+    @staticmethod
+    def export_most_recent_to_text_file(file_path):
+        """
+        Exports the transcription of the most recent CallDetails entry to a text file.
+
+        Args:
+            file_path (str): The path of the text file to save the transcription.
+        """
+        try:
+            # Fetch the most recent CallDetails document based on date
+            recent_call = CallDetails.objects.order_by('-date').first()
+
+            if not recent_call:
+                print("No CallDetails found in the database.")
+                return
+
+            # Extract the utterances
+            transcription = recent_call.transcription
+            if not transcription or 'utterances' not in transcription:
+                print("No transcription data available.")
+                return
+
+            utterances = transcription['utterances']
+
+            # Write each utterance text to the file
+            with open(file_path, 'w') as file:
+                for utterance in utterances:
+                    if 'text' in utterance:
+                        file.write(f"{utterance['text']}\n")
+
+            print(f"Transcription successfully written to {file_path}")
+
+        except Exception as e:
+            print(f"An error occurred while exporting transcription: {e}")
+
+
 # Updated Pydantic Model for CallDetails
 class CallDetailsModel(BaseModel):
     date: datetime

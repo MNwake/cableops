@@ -1,18 +1,20 @@
 <MyTopAppBar>:
-    type: 'small'
 
     MDTopAppBarLeadingButtonContainer:
 
         MDActionTopAppBarButton:
             icon: 'menu'
+            adaptive_width: True
             on_release: root.menu_icon_press()
 
     MDTopAppBarTitle:
-        text: root.park_name
+        text: root.title
+        size_hint_x: 1
         pos_hint: {'center_x': .5}
 
     MDTopAppBarTrailingButtonContainer:
 
         MDActionTopAppBarButton:
             icon: 'cog'
+            adaptive_width: True
             on_release: root.settings_icon_press()

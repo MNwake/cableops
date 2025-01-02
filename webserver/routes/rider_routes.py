@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from database import ServerMemory
 from database.base_models import RiderBase, RiderProfileBase
-from database.events import Rider
+from database.CWA_Events import Rider
 
 
 

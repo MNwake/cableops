@@ -1,6 +1,6 @@
 from mongoengine import EmbeddedDocument, BooleanField
 
-from database.cable import DSLRCamera
+from database.CableOps import DSLRCamera
 
 
 #notes

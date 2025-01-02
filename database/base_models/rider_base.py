@@ -5,7 +5,7 @@ from bson import ObjectId
 from pydantic import BaseModel, validator
 
 from database.base_models import RiderStatsBase
-from database.events import Rider
+from database.CWA_Events import Rider
 from database.utils import calculate_division
 
 

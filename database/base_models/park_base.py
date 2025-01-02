@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, validator
 from bson import ObjectId
-from database.cable.park import Park
+from database.CableOps.park import Park
 
 from pydantic import BaseModel
 

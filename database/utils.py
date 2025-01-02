@@ -1,14 +1,13 @@
 import time
 from datetime import datetime, date
 from enum import Enum
-from typing import Optional
 
 import math
 from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 from pandas import DataFrame, to_datetime, concat
 
-from database.events import Scorecard
+from database.CWA_Events import Scorecard
 
 bib_colors = ['red', 'blue', 'green', 'yellow']
 color_dict = {

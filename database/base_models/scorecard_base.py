@@ -4,7 +4,7 @@ from typing import Optional, List
 from bson import ObjectId
 from pydantic import BaseModel, validator
 
-from database.events import Scorecard
+from database.CWA_Events import Scorecard
 
 
 class ScorecardBase(BaseModel):

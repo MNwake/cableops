@@ -1,9 +1,9 @@
-from database.cable.park import Park
+from database.CableOps.park import Park
 from database.base_models.rider_base import calculate_cwa_rank, calculate_age_rank, calculate_experience_rank, \
     calculate_division_rank, RiderProfileBase
 from database.base_models import RiderBase, RiderStatsBase, ParkBase, ScorecardBase, ContestCarrierBase
-from database.events import Rider, Scorecard
-from database.events import RiderCompStats, ContestCarrier
+from database.CWA_Events import Rider, Scorecard
+from database.CWA_Events import RiderCompStats, ContestCarrier
 
 
 class DatabaseConverter:

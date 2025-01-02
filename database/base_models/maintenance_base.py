@@ -5,8 +5,8 @@ from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
-from database.cable.maintenance import MaintenanceServiceType, Maintenance, ServiceLog
-from database.cable.park import Park
+from database.CableOps.maintenance import MaintenanceServiceType, Maintenance, ServiceLog
+from database.CableOps.park import Park
 
 
 # BaseModel for EqualizeMaintenance

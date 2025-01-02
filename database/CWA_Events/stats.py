@@ -140,7 +140,7 @@ class RiderCompStats(Document):
 
     @classmethod
     def get_rider_ranking_by_age_group(cls, rider_id):
-        from database.events import Rider
+        from database.CWA_Events import Rider
         from database.utils import calculate_age_group
 
         rider = Rider.objects(id=rider_id).first()
@@ -202,7 +202,7 @@ class RiderCompStats(Document):
 
     @classmethod
     def get_rider_ranking_by_experience(cls, rider_id):
-        from database.events import Rider
+        from database.CWA_Events import Rider
 
         # Get the current rider's experience
         current_rider = Rider.objects(id=rider_id).first()

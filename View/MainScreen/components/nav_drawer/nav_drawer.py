@@ -22,4 +22,4 @@ class DrawerItem(MDNavigationDrawerItem):
     #     print('on_text:', value)
 
 class MyNavDrawer(MDNavigationDrawer):
-    pass
+    switch_screen = ObjectProperty()

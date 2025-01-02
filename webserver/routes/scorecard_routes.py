@@ -1,11 +1,10 @@
 import json
 from typing import Optional, List
 
-from fastapi import APIRouter, Body, HTTPException, Query
-from starlette.websockets import WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Query
 
 from database.base_models.scorecard_base import ScorecardBase
-from database.events import RiderCompStats, Rider, Scorecard
+from database.CWA_Events import Scorecard
 
 
 class ScorecardRoutes:
