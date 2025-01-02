@@ -1,0 +1,228 @@
+<CableCoinScreenView>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: "12dp"
+        spacing: "12dp"
+
+        MDLabel:
+            text: "CableCoin Overview"
+            halign: "center"
+            adaptive_height: True
+
+        MDBoxLayout:
+            orientation: 'horizontal'
+            adaptive_height: True
+
+            MDBoxLayout:
+                orientation: 'vertical'
+                adaptive_height: True
+                # Contract Info with Copy Button
+                MDLabel:
+                    text: f"Network: {root.network_name}"
+                    theme_text_color: "Secondary"
+                    adaptive_height: True
+                    halign: "center"
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    adaptive_height: True
+                    MDLabel:
+                        text: f"Contract Address: {root.contract_address}"
+                        theme_text_color: "Secondary"
+                        adaptive_height: True
+                        halign: "center"
+                    MDIconButton:
+                        icon: "clipboard"
+                        adaptive_height: True
+                        theme_icon_color: "Custom"
+                        icon_color: "blue"
+                        on_release: root.copy_contract_address()
+                        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+
+            MDDivider:
+                size_hint_x: 1
+                orientation: 'vertical'
+                pos_hint: {'center_x': .5, 'center_y': .5}
+
+            # Balance and Supply Section
+            MDBoxLayout:
+                orientation: "vertical"
+                spacing: "12dp"
+                MDLabel:
+                    id: balance_label
+                    text: f"Your Balance: {root.balance} CableCoin"
+                    halign: "center"
+                MDLabel:
+                    id: total_supply_label
+                    text: f"Total Supply: {root.total_supply} CableCoin"
+                    halign: "center"
+                MDDivider:
+                    size_hint_x: .5
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+
+        # Actions Section
+        MDBoxLayout:
+            orientation: "horizontal"
+            spacing: "24dp"
+            padding: "12dp"
+            adaptive_height: True
+
+            MDButton:
+                style: "elevated"
+                theme_shadow_color: "Custom"
+                shadow_color: "gray"
+                pos_hint: {"center_x": 0.5}
+                on_release: root.controller.get_balance()
+                MDButtonIcon:
+                    icon: "refresh"
+                    theme_icon_color: "Custom"
+                    icon_color: "green"
+                MDButtonText:
+                    text: "Refresh Balance"
+
+            MDButton:
+                style: "elevated"
+                theme_shadow_color: "Custom"
+                shadow_color: "gray"
+                pos_hint: {"center_x": 0.5}
+                on_release: root.controller.view_transactions()
+                MDButtonIcon:
+                    icon: "history"
+                    theme_icon_color: "Custom"
+                    icon_color: "blue"
+                MDButtonText:
+                    text: "View Transactions"
+
+            MDButton:
+                style: "elevated"
+                theme_shadow_color: "Custom"
+                shadow_color: "gray"
+                pos_hint: {"center_x": 0.5}
+                on_release: root.controller.get_total_supply()
+                MDButtonIcon:
+                    icon: "database"
+                    theme_icon_color: "Custom"
+                    icon_color: "purple"
+                MDButtonText:
+                    text: "Get Total Supply"
+
+        # Transfer Section
+        MDBoxLayout:
+            adaptive_height: True
+            orientation: "vertical"
+
+            MDLabel:
+                text: "Make a Transfer"
+                theme_text_color: "Primary"
+                halign: "center"
+                padding: '12dp'
+                adaptive_height: True
+
+            MDBoxLayout:
+                orientation: "horizontal"
+                spacing: "8dp"
+                adaptive_height: True
+
+                MDLabel:
+                    text: "Recipient Address:"
+                    halign: "right"
+                    adaptive_width: True
+                MDTextField:
+                    id: transfer_address
+                    hint_text: "0x..."
+                    helper_text: "Enter recipient address"
+                    helper_text_mode: "on_focus"
+
+            MDBoxLayout:
+                orientation: "horizontal"
+                spacing: "8dp"
+                adaptive_height: True
+                MDLabel:
+                    text: "Amount:"
+                    halign: "right"
+                    adaptive_width: True
+                MDTextField:
+                    id: transfer_amount
+                    hint_text: "Amount to transfer"
+                    helper_text: "Enter amount"
+                    helper_text_mode: "on_focus"
+                    input_filter: "float"
+
+            MDButton:
+                style: "elevated"
+                theme_shadow_color: "Custom"
+                shadow_color: "gray"
+                pos_hint: {"center_x": 0.5}
+                on_release: root.initiate_transfer()
+                MDButtonIcon:
+                    icon: "send"
+                    theme_icon_color: "Custom"
+                    icon_color: "orange"
+                MDButtonText:
+                    text: "Transfer Tokens"
+
+        # Owner Controls Section (for owner/admin only)
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: "12dp"
+            padding: "12dp"
+#            adaptive_height: True
+
+            MDLabel:
+                text: "Owner Controls"
+#                font_style: "H6"
+                theme_text_color: "Primary"
+                halign: "center"
+
+            MDBoxLayout:
+                orientation: "horizontal"
+                spacing: "12dp"
+                MDButton:
+                    style: "elevated"
+                    theme_shadow_color: "Custom"
+                    shadow_color: "gray"
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.controller.mint_tokens()
+                    MDButtonIcon:
+                        icon: "currency-usd"
+                        theme_icon_color: "Custom"
+                        icon_color: "green"
+                    MDButtonText:
+                        text: "Mint Tokens"
+                MDButton:
+                    style: "elevated"
+                    theme_shadow_color: "Custom"
+                    shadow_color: "gray"
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.controller.burn_tokens()
+                    MDButtonIcon:
+                        icon: "fire"
+                        theme_icon_color: "Custom"
+                        icon_color: "red"
+                    MDButtonText:
+                        text: "Burn Tokens"
+
+                MDButton:
+                    style: "elevated"
+                    theme_shadow_color: "Custom"
+                    shadow_color: "gray"
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.controller.pause_contract()
+                    MDButtonIcon:
+                        icon: "pause"
+                        theme_icon_color: "Custom"
+                        icon_color: "yellow"
+                    MDButtonText:
+                        text: "Pause Contract"
+                MDButton:
+                    style: "elevated"
+                    theme_shadow_color: "Custom"
+                    shadow_color: "gray"
+                    pos_hint: {"center_x": 0.5}
+                    on_release: root.controller.resume_contract()
+                    MDButtonIcon:
+                        icon: "play"
+                        theme_icon_color: "Custom"
+                        icon_color: "green"
+                    MDButtonText:
+                        text: "Resume Contract"
