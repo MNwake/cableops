@@ -12,3 +12,21 @@ class Cryptocurrency(BaseModel):
     icon_url: str
     class Config:
         from_attributes = True
+
+
+class CryptoToken(BaseModel):
+    id: str
+    symbol: str
+    name: str
+    price: float
+    logo: str
+    address: Optional[str] = None  # Add address field
+
+
+
+class TransactionDetails(BaseModel):
+    estimatedAmount: float
+    networkFee: float
+    totalCost: float
+    pricePerToken: float
+    inputCurrency: str

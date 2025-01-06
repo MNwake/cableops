@@ -16,6 +16,12 @@
     "svelte": "^3.59.2"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.1.0"
-  }
+    "@openzeppelin/contracts": "^5.1.0",
+    "ethers": "^6.13.4"
+  },
+  "description": "CWA main classes - backend - no ui",
+  "main": "rollup.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

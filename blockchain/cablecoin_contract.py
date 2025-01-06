@@ -142,16 +142,40 @@ class CableCoinContract:
     def transfer(self, to_address, amount):
         print('Initiating transfer')
         account = self.w3.eth.account.from_key(os.getenv("PRIVATE_KEY"))
+
+        # Fetch base fee and priority fee
+        base_fee = self.w3.eth.get_block("pending").baseFeePerGas
+        priority_fee = self.w3.eth.max_priority_fee  # Fetch priority fee dynamically
+
+        # Calculate effective gas price
+        gas_price = base_fee + priority_fee
+        print(f"Calculated Gas Price: {gas_price}")
+
+        # Estimate Gas
+        estimated_gas = self.contract.functions.transfer(to_address, amount).estimate_gas({"from": account.address})
+        print(f"Estimated Gas: {estimated_gas}")
+
+        # Build transaction
         transaction = self.contract.functions.transfer(to_address, amount).build_transaction({
             "from": account.address,
             "nonce": self.w3.eth.get_transaction_count(account.address),
-            "gas": 200000,
-            "gasPrice": self.w3.eth.gas_price,
+            "gas": estimated_gas + 10000,  # Add buffer to estimated gas
+            "maxFeePerGas": gas_price,
+            "maxPriorityFeePerGas": priority_fee,
         })
 
+        # Sign and send transaction
         signed_tx = self.w3.eth.account.sign_transaction(transaction, os.getenv("PRIVATE_KEY"))
-        tx_hash = self.w3.eth.send_raw_transaction(
-            signed_tx.raw_transaction)  # Use 'raw_transaction' instead of 'rawTransaction'
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        print(f"Transaction sent with hash: {tx_hash.hex()}")
+
+        # Wait for the transaction receipt
+        print("Waiting for the transaction to be mined...")
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        actual_gas_used = receipt.gasUsed
+        print(f"Transaction mined. Gas Used: {actual_gas_used}")
+        print(f"Gas Difference (Limit - Used): {estimated_gas + 10000 - actual_gas_used}")
+
         return tx_hash
 
     # New Methods

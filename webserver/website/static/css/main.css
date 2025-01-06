@@ -1,0 +1,601 @@
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap');
+@import 'components/header.css';
+@import 'components/footer.css';
+
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #1e40af;
+    --text-color: #1f2937;
+    --background-color: #ffffff;
+    --accent-color: #3b82f6;
+    --section-padding: 5rem;
+    --section-spacing: 3rem;
+    --header-height: 80px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: #f8fafc;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* Navigation */
+.main-nav {
+    height: var(--header-height);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+    background-color: var(--text-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    color: white;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.logo span {
+    color: #4a90e2;  /* or your brand color */
+    font-style: italic;
+}
+.logo a {
+    text-decoration: none;  /* Remove underline */
+    color: white;           /* Set text color to white */
+    font-size: 1.5rem;      /* Match original font size */
+    font-weight: bold;      /* Ensure bold styling */
+}
+
+.logo a:visited {
+    color: white;           /* Ensure the logo remains white after being clicked */
+}
+
+.logo a span {
+    color: #4a90e2;         /* Set "3" to blue */
+    font-style: italic;     /* Keep italic styling */
+}
+
+.logo a span:visited {
+    color: #4a90e2;         /* Ensure "3" remains blue after being clicked */
+}
+
+/* Optional: Add hover effect if needed */
+.logo a:hover {
+    color: white;           /* Keep white on hover */
+}
+
+.logo a span:hover {
+    color: #4a90e2;         /* Keep blue on hover */
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: white;
+    font-weight: 500;
+}
+
+.launch-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.launch-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Sections */
+section {
+    padding: var(--section-padding) 5%;
+    margin-bottom: var(--section-spacing);
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.content-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.content-wrapper img {
+    max-width: 45%;
+    border-radius: 8px;
+}
+
+.content-wrapper .text-content {
+    flex: 1;
+    text-align: left;
+    padding: 2rem;
+}
+
+.content-wrapper .text-content h2 {
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    color: var(--text-color);
+}
+
+.content-wrapper .text-content p {
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+.content-wrapper .text-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Products Grid */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.product-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.product-card img {
+    width: 100%;
+    border-radius: 4px;
+}
+
+/* Contact Form */
+.contact-section {
+    padding: var(--section-padding) 0;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.contact-section h2 {
+    margin-bottom: 1rem;
+}
+
+.contact-section > p {
+    margin-bottom: 2rem;
+    color: var(--text-color);
+}
+
+#contactForm {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 800px;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#contactForm textarea,
+#contactForm button {
+    grid-column: span 2;
+}
+
+#contactForm input,
+#contactForm textarea {
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+#contactForm button {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Footer */
+footer {
+    background-color: var(--text-color);
+    color: white;
+    padding: 4rem 5% 2rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-newsletter {
+    grid-column: span 3;
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+#newsletterForm {
+    display: flex;
+    gap: 1rem;
+    max-width: 500px;
+    margin: 1rem auto;
+}
+
+#newsletterForm input {
+    flex: 1;
+    padding: 1rem;
+    border: none;
+    border-radius: 4px;
+}
+
+#newsletterForm button {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.footer-bottom {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    opacity: 0.8;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-links img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+    
+    .content-wrapper {
+        flex-direction: column-reverse;
+    }
+    
+    .content-wrapper img {
+        max-width: 100%;
+    }
+    
+    .content-wrapper .text-content {
+        padding: 2rem 0;
+    }
+} 
+
+/* Hero Section */
+.hero-section {
+    margin-top: var(--header-height);
+    min-height: calc(100vh - var(--header-height));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-image: 
+        linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+        url('/static/images/motor_tower.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+}
+
+.hero-content {
+    max-width: 800px;
+    padding: 2rem;
+}
+
+.hero-content h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-top: 2rem;
+    transition: background-color 0.3s;
+}
+
+/* Solutions Grid */
+.solutions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.solution-card {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.solution-card .icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.solution-card .icon img {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s ease;
+    object-fit: contain;
+}
+
+.solution-card:hover .icon img {
+    transform: scale(1.1);
+}
+
+.solution-card h3 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.solution-card p {
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+/* Services Section */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.service-card {
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Callout Section */
+.callout-section {
+    text-align: center;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 4rem 2rem;
+}
+
+.callout-section .cta-button {
+    background-color: #FF6B35;
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.callout-section .cta-button:hover {
+    background-color: #FF8C35;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Newsletter Signup */
+.newsletter-signup {
+    margin-top: 3rem;
+    text-align: center;
+}
+
+#newsletterForm {
+    display: flex;
+    gap: 1rem;
+    max-width: 500px;
+    margin: 1rem auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+
+    #newsletterForm {
+        flex-direction: column;
+    }
+} 
+
+/* Navigation Header */
+.main-nav {
+    height: var(--header-height);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+    background-color: var(--text-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Logo styling */
+.main-nav .logo a {
+    text-decoration: none;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.main-nav .logo a:hover,
+.main-nav .logo a:visited {
+    color: white;
+}
+
+/* Navigation Links */
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    color: var(--primary-color);
+} 
+
+/* Project Teaser Section */
+.project-teaser {
+    text-align: center;
+    padding: var(--section-padding) 5%;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-header h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    font-size: 1.2rem;
+    color: var(--text-color);
+    opacity: 0.8;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.teaser-cta {
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+    background-color: var(--secondary-color);
+} 
+
+/* Update the mobile menu styles */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1001;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .nav-links {
+        display: none;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        right: 0;
+        background-color: var(--text-color);
+        flex-direction: column;
+        padding: 1rem;
+        text-align: center;
+        z-index: 1000;
+    }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .nav-links li {
+        margin: 1rem 0;
+    }
+
+    .nav-links a {
+        display: block;
+        padding: 0.5rem;
+    }
+
+    .launch-btn {
+        margin: 0.5rem auto;
+        display: inline-block;
+    }
+} 
