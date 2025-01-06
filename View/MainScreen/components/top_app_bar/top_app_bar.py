@@ -6,9 +6,11 @@ from kivymd.uix.appbar import MDTopAppBar
 
 
 class MyTopAppBar(MDTopAppBar, EventDispatcher):
-    park_name = StringProperty()
+    title = StringProperty()
     menu_icon = ObjectProperty(None)
     settings_icon = ObjectProperty(None)
+
+
 
     def menu_icon_press(self):
         if self.menu_icon:

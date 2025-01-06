@@ -1,0 +1,27 @@
+{
+  "name": "cable-dex",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "rollup": "^3.15.0",
+    "rollup-plugin-css-only": "^4.5.2",
+    "rollup-plugin-svelte": "^7.1.2",
+    "svelte": "^3.59.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.1.0",
+    "ethers": "^6.13.4"
+  },
+  "description": "CWA main classes - backend - no ui",
+  "main": "rollup.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

@@ -18,8 +18,8 @@ class DrawerItem(MDNavigationDrawerItem):
     def __init__(self, **kwargs):
         super(DrawerItem, self).__init__(**kwargs)
 
-    def on_text(self, instance, value):
-        print('on_text:', value)
+    # def on_text(self, instance, value):
+    #     print('on_text:', value)
 
 class MyNavDrawer(MDNavigationDrawer):
-    pass
+    switch_screen = ObjectProperty()

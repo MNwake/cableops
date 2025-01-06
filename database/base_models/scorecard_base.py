@@ -1,14 +1,15 @@
-import time
 from datetime import datetime
+from typing import Optional, List
 
 from bson import ObjectId
-from pydantic import BaseModel, Field, parse_obj_as
-from typing import Optional, List
+from pydantic import BaseModel, validator
+
+from database.CWA_Events import Scorecard
 
 
 class ScorecardBase(BaseModel):
-    id: str = Field(default_factory=lambda: str(ObjectId()))
-    date: datetime = datetime.now()
+    id: Optional[str] = None
+    date: Optional[datetime] = datetime.now()
     section: Optional[str]
     division: Optional[float]
     execution: Optional[float]
@@ -16,42 +17,51 @@ class ScorecardBase(BaseModel):
     difficulty: Optional[float]
     score: Optional[float]
     landed: Optional[bool]
-    park: Optional[str] = Field(default_factory=lambda: str(ObjectId())) # Assuming reference fields are represented as string IDs
-    rider: Optional[str] = Field(default_factory=lambda: str(ObjectId()))
-    judge: Optional[str] = Field(default_factory=lambda: str(ObjectId()))
+    approach: Optional[str]
+    trick_type: Optional[str]
+    spin: Optional[str]
+    spin_direction: Optional[str]
+    modifiers: List[str]
+    session: Optional[str]
+    park: Optional[str] = None
+    rider: Optional[str]
+    judge: Optional[str] = None
+
+    @validator('id', pre=True)
+    def validate_id(cls, value):
+        if isinstance(value, ObjectId):
+            return str(value)
+        return value
+
+    # Assuming `park` and `rider` fields should store just the ID of the related objects
+    @validator('park', 'rider', pre=True)
+    def validate_related_objects(cls, value):
+        if hasattr(value, 'id'):
+            return str(value.id)
+        return value
+
+    @validator('date', pre=True)
+    def format_incoming_date(cls, value):
+        if isinstance(value, datetime):
+            return value
+        elif isinstance(value, str):
+            try:
+                return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+            except ValueError:
+                raise ValueError(f"Invalid date format for {value}")
+        else:
+            raise TypeError("Invalid type for date field")
 
     class Config:
-        arbitrary_types_allowed = True
-        # Additional configurations like ORM mode can be added here if needed
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.strftime("%Y-%m-%dT%H:%M:%S")
+        }
 
-    @classmethod
-    def mongo_to_pydantic(cls, scorecards):
-        """
-        Convert MongoDB Scorecard objects to Pydantic ScorecardBase models.
+    def save(self):
+        # Convert this Pydantic model to a MongoDB Document and save it
+        scorecard_data = self.dict(exclude_unset=True)
 
-        :param scorecards: List of Scorecard objects.
-        :return: Converted Pydantic ScorecardBase model(s).
-        """
-        # Convert MongoDB Scorecard objects to dictionaries
-        scorecard_dicts = [
-            {
-                'id': str(scorecard.id),
-                'date': scorecard.date,
-                'section': scorecard.section,
-                'division': scorecard.division,
-                'execution': scorecard.execution,
-                'creativity': scorecard.creativity,
-                'difficulty': scorecard.difficulty,
-                'score': scorecard.score,
-                'landed': scorecard.landed,
-                'park': str(scorecard.park.id) if scorecard.park else None,
-                'rider': str(scorecard.rider.id) if scorecard.rider else None,
-                'judge': str(scorecard.judge.id) if scorecard.judge else None
-            }
-            for scorecard in scorecards
-        ]
-
-        # Parse the list of dictionaries into a list of Pydantic models
-        converted_scorecards = parse_obj_as(List[cls], scorecard_dicts)
-
-        return converted_scorecards
+        new_scorecard = Scorecard(**scorecard_data)
+        new_scorecard.save()
+        return new_scorecard.id

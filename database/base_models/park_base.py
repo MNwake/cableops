@@ -1,36 +1,91 @@
+from typing import List, Optional
+from pydantic import BaseModel, validator
 from bson import ObjectId
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from database.CableOps.park import Park
+
+from pydantic import BaseModel
+
+
+class CableBase(BaseModel):
+    id: str
+    name: str
+    num_carriers: int  # Following snake_case for JSON mapping
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+
+class AddressBase(BaseModel):
+    street: str
+    city: str
+    state: str
+    zip: str
+    country: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+
+class ContactBase(BaseModel):
+    phone_number: str
+    name: str
+    position: str
+    email: str
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
 
 class ParkBase(BaseModel):
-    id: str = Field(default_factory=lambda: str(ObjectId()))
+    id: str
     name: str
-    state: Optional[str] = None
     abbreviation: Optional[str] = None
+    cover_photo: Optional[str] = None
+    logo: Optional[str] = None
+    address: Optional[AddressBase] = None
+    maintenance: Optional[str] = None
+    contacts: Optional[List[ContactBase]] = []  # List of Contact objects
+    cables: Optional[List[CableBase]]
     team: Optional[str] = None
-    cable: Optional[List[str]] = []
     riders_checked_in: Optional[List[str]] = []
 
-    @classmethod
-    def mongo_to_pydantic(cls, parks):
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+    # Validator for ObjectId
+    @validator('id', pre=True)
+    def validate_id(cls, value):
+        if isinstance(value, ObjectId):
+            return str(value)
+        return value
+
+
+    def save(self):
         """
-        Convert MongoDB Park objects to Pydantic ParkBase models.
-
-        :param parks: List of Park objects.
-        :return: Converted Pydantic ParkBase model(s).
+        Save the ParkBase instance to MongoDB.
         """
-        converted_parks = []
+        try:
+            # Convert the Pydantic model to a dictionary
+            park_data = self.dict()
 
-        for park in parks:
-            pydantic_park = cls(
-                id=str(park.id),
-                name=park.name,
-                state=park.state,
-                abbreviation=park.abbreviation,
-                team=str(park.team),
-                # cable=park.cable,
-                # riders_checked_in=[str(rider.id) for rider in park.riders_checked_in]
-            )
-            converted_parks.append(pydantic_park)
+            # Check if the park exists in the database and update, or insert a new one
+            existing_park = Park.objects(id=self.id).first()
 
-        return converted_parks
+            if existing_park:
+                # Update the existing park document in the database
+                existing_park.update(**park_data)
+            else:
+                # Insert a new park document if it doesn't exist
+                new_park = Park(**park_data)
+                new_park.save()
+
+            print(f"Park {self.id} saved to database successfully")
+        except Exception as e:
+            print(f"Failed to save park {self.id}: {e}")
+            raise e
+
+

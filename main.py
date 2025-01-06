@@ -11,18 +11,40 @@ https://github.com/HeaTTheatR/LoginAppMVC
 https://en.wikipedia.org/wiki/Model–view–controller
 """
 import sys
-
+import os
+from dotenv import load_dotenv
 from kivy.core.window import Window
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 
+from Utility.sync import sync_files
 from View.screens import screens
-from database import FastAPIApp, DataBase
+from database import DataBase
+from webserver import FastAPIApp
 
 if 'linux' in sys.platform:
     Window.size = (1000, 900)
+    import RPi.GPIO as GPIO
+    GPIO.setwarnings(False)
+    # Load environment variables from .env file
+    load_dotenv()
 
-import subprocess
+    # Verify the SOLCX_BINARY variable
+    solc_binary = os.getenv("SOLCX_BINARY")
+    print(f"Using solc binary at: {solc_binary}")
+
+import logging
+
+# Set the root logger level to WARNING to suppress DEBUG and INFO logs globally
+logging.basicConfig(level=logging.WARNING)
+
+# Suppress specific library logs
+logging.getLogger('web3').setLevel(logging.WARNING)        # Suppress Web3.py logs
+logging.getLogger('urllib3').setLevel(logging.WARNING)     # Suppress urllib3 logs used by Web3.py
+logging.getLogger('kivy').setLevel(logging.WARNING)        # Suppress Kivy logs
+logging.getLogger('pymongo').setLevel(logging.WARNING)     # Suppress pymongo logs
+logging.getLogger('firebase_admin').setLevel(logging.WARNING)  # Suppress Firebase Admin logs
+
 
 import firebase_admin
 from firebase_admin import credentials
@@ -38,26 +60,9 @@ else:
         'storageBucket': 'the-cwa.appspot.com'
     })
 
+import os
+os.environ["KIVY_LOG_LEVEL"] = "warning"
 
-def sync_files():
-    rsync_command = [
-        "rsync",
-        "-avz",
-        "--delete",  # Add this line
-        "/Users/theokoester/dev/projects/python/CWA/cableops/",  # Source directory on Mac
-        "theokoester@raspi:/home/theokoester/dev/cableops/"  # Destination directory on Raspberry Pi
-    ]
-    try:
-        print('rsync')
-        result = subprocess.run(rsync_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("Rsync completed successfully")
-        print(result.stdout.decode())
-    except subprocess.CalledProcessError as e:
-        print("Error occurred while running rsync")
-        print(e.stderr.decode())
-
-
-# Start the FastAPI server
 
 class CableOps(MDApp):
     def __init__(self, **kwargs):
@@ -73,6 +78,8 @@ class CableOps(MDApp):
         self.theme_cls.theme_style = 'Dark'
         # self.theme_cls.dynamic_color = False
         self.generate_application_screens()
+        self.manager_screens.current = 'main screen'
+
 
         return self.manager_screens
 
@@ -105,8 +112,14 @@ class CableOps(MDApp):
 
 
 if __name__ == '__main__':
+    print('Hello World!')
     if 'darwin' in sys.platform:
+        print("Test " * 10)
         sync_files()
+        from solcx import get_installed_solc_versions
+
+        print("Installed Solidity Versions:", get_installed_solc_versions())
 
     # Run Kivy application
     CableOps().run()
+#

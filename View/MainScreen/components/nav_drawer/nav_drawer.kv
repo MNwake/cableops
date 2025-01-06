@@ -59,12 +59,14 @@
         MDNavigationDrawerDivider:
 
         DrawerItem:
-            text: 'Select a Park'
+            text: 'CableOps'
             icon: 'hexagon-outline'
+            on_release: root.switch_screen('cable ops')  # Pass screen name
 
         DrawerItem:
-            text: 'Add New Park'
-            icon: 'shape-polygon-plus'
+            text: 'CableCoin'
+            icon: 'ethereum'
+            on_release: root.switch_screen('cable coin')
 
 
 

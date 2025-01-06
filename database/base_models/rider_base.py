@@ -1,94 +1,122 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, Tuple
 
 from bson import ObjectId
-from pydantic import Field, BaseModel, parse_obj_as
+from pydantic import BaseModel, validator
 
-from database import Rider
+from database.base_models import RiderStatsBase
+from database.CWA_Events import Rider
+from database.utils import calculate_division
 
 
 class RiderBase(BaseModel):
-    id: str = Field(default_factory=lambda: str(ObjectId()))
+    id: str
     email: Optional[str] = None
-    first_name: str
-    last_name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     date_of_birth: Optional[datetime] = None
     gender: Optional[str] = None
-    date_created: datetime = Field(default_factory=lambda: datetime.utcnow().replace(second=0))
+    date_created: Optional[datetime] = datetime.now()
     profile_image: str = ''
     stance: Optional[str] = None
     year_started: Optional[int] = None
     division: Optional[float] = None
-    home_park: Optional[str] = Field(default_factory=lambda: str(ObjectId()))
-    statistics: Optional[str] = Field(default_factory=lambda: str(ObjectId()))
+    home_park: Optional[str]
+    statistics: Optional[str]
+    is_registered: Optional[bool] = False
+    waiver_date: Optional[datetime] = None
+
+    @validator('id', 'home_park', 'statistics', pre=True)
+    def convert_objectid_to_string(cls, value):
+        if isinstance(value, ObjectId):
+            return str(value)
+        return value
+
+    @validator('home_park', 'statistics', pre=True)
+    def validate_object_references(cls, value):
+        if hasattr(value, 'id'):
+            # Convert the MongoEngine document reference to a string ID
+            return str(value.id)
+        return value
+
+    @validator('date_of_birth', 'date_created', 'waiver_date', pre=True, always=True)
+    def format_datetime(cls, value):
+        if not value:
+            return None
+        if isinstance(value, datetime):
+            return value
+        for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%d', '%d/%m/%Y'):
+            try:
+                return datetime.strptime(value, fmt)
+            except ValueError:
+                continue
+        raise ValueError(f"Invalid date format for {value}")
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.strftime("%Y-%m-%dT%H:%M:%S")
+        }
 
     @classmethod
-    def mongo_to_pydantic(cls, riders):
-        """
-        Convert MongoDB Rider objects to Pydantic RiderBase models synchronously.
-        Includes rider statistics in the converted models.
+    def update_or_create_rider(cls, rider_data: dict):
+        rider_id = rider_data.get('id')
+        rider = Rider.objects(id=ObjectId(rider_id)).first() if rider_id else None
 
-        :param riders: List of MongoDB Rider objects or a single Rider object.
-        :return: Converted Pydantic RiderBase model(s) with statistics.
-        """
-        # Convert MongoDB Rider objects to dictionaries
-        rider_dicts = []
-        count = 1
-        for rider in riders:
-            rider_dict = {
-                'id': str(rider.id),
-                'email': rider.email,
-                'first_name': rider.first_name,
-                'last_name': rider.last_name,
-                'date_of_birth': rider.date_of_birth.strftime("%Y-%m-%d %H:%M:%S"),  # Format date_of_birth
-                'gender': rider.gender,
-                'date_created': rider.date_created.strftime("%Y-%m-%d %H:%M:%S"),  # Format date_created
-                'profile_image': rider.profile_image,
-                'stance': rider.stance,
-                'year_started': rider.year_started,
-                'home_park': str(rider.home_park.id) if rider.home_park else None,
-                'statistics': str(rider.statistics.id) if rider.statistics else None
-            }
-            rider_dicts.append(rider_dict)
-            count += 1
-
-        # Parse the list of dictionaries into a list of Pydantic models
-        converted_riders = parse_obj_as(List[cls], rider_dicts)
-        return converted_riders
-
-    async def fetch_rider_by_id(self, rider_id: str):
-        rider = Rider.objects(id=ObjectId(rider_id)).first()
-        if rider:
-            return RiderBase(
-                id=str(rider.id),
-                email=rider.email,
-                first_name=rider.first_name,
-                last_name=rider.last_name,
-                date_of_birth=rider.date_of_birth,
-                gender=rider.gender,
-                date_created=rider.date_created,
-                profile_image=rider.profile_image,
-                stance=rider.stance,
-                year_started=rider.year_started,
-                home_park=rider.home_park,
-                statistics=rider.statistics
-            )
+        if not rider:
+            print("Creating new rider")  # Debugging line
+            rider = Rider()
         else:
-            return None
+            print("rider found, updating existing")
 
-    async def create_new_rider(self, rider_data: dict):
-        new_rider = Rider(
-            email=rider_data.get('email'),
-            first_name=rider_data.get('first_name'),
-            last_name=rider_data.get('last_name'),
-            date_of_birth=rider_data.get('date_of_birth'),
-            gender=rider_data.get('gender'),
-            profile_image=rider_data.get('profile_image'),
-            stance=rider_data.get('stance'),
-            year_started=rider_data.get('year_started'),
-            home_park=rider_data.get('home_park'),
-            statistics=rider_data.get('statistics')
-        )
-        new_rider.save()
-        return new_rider
+        rider.update_fields(rider_data)
+        rider.save()  # Save the rider to the database
+        print("rider Saved")
+        return rider
 
+
+class RiderProfileBase(BaseModel):
+    rider: Optional[RiderBase] = None
+    cwa_rank: Optional[int] = 0
+    age_rank: Optional[int] = 0
+    division_rank: Optional[int] = 0
+    experience_rank: Optional[int] = 0
+    trick_count: Optional[int] = 0
+    scored_count: Optional[int] = 0
+    attempted_count: Optional[int] = 0
+    statistics: Optional[RiderStatsBase] = None
+    tricks: Optional[dict] = {}
+
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.strftime("%Y-%m-%dT%H:%M:%S")
+        }
+
+
+
+def calculate_cwa_rank(rider_id, rider_rankings_cwa):
+    for index, (ranking_id, score) in enumerate(rider_rankings_cwa):
+        if ranking_id == rider_id:
+            return index + 1
+    return 0
+
+
+def calculate_age_rank(rider_id, rider_rankings_by_age_group):
+    for age_group, rider_ids in rider_rankings_by_age_group.items():
+        if rider_id in rider_ids:
+
+            return rider_ids.index(rider_id) + 1
+    return 0
+
+def calculate_experience_rank(rider_id, rider_rankings_by_experience):
+    for bracket, riders in rider_rankings_by_experience.items():
+        if rider_id in [r['rider_id'] for r in riders]:
+            return list(r['rider_id'] for r in riders).index(rider_id) + 1
+    return 0
+
+def calculate_division_rank(rider_id, rider_rankings_by_division, division_score):
+    division = calculate_division(division_score)
+    for rank, (ranking_rider_id, score) in enumerate(rider_rankings_by_division.get(division, [])):
+        if ranking_rider_id == rider_id:
+            return rank + 1
+    return 0

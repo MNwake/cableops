@@ -6,6 +6,8 @@
       <sourceFolder url="file://$MODULE_DIR$/database" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.myvenv" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/local" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.12 (server)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
