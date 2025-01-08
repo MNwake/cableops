@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from Controller.stripe_manager import StripeManager
+from controller.stripe_manager import StripeManager
 
 router = APIRouter()
 stripe_manager = StripeManager()

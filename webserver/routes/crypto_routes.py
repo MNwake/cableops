@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from typing import List
 
-from Controller.crypto_manager import CryptoManager
+from controller.crypto_manager import CryptoManager
 from database.base_models.cryptocurrency_base import CryptoToken
 
 router = APIRouter()
